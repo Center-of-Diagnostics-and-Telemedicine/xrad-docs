@@ -1,0 +1,257 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Сборка OpenJPEG в Windows**
+
+
+
+# Инструменты #
+
+Компилятор: MSVC 2015. [TODO: Перейти на MSVC 2019.]
+
+CMake: использовался CMake 3.16.2 `cmake-3.16.2-win32-x86`
+([cmake.org](https://cmake.org/download/) [проверено 2020-01-09]).
+
+Библиотеки:
+
+- OpenJPEG (исходные тексты): `openjpeg-2.2.0.zip`
+  ([github:
+  Release OpenJPEG 2.2.0](https://github.com/uclouvain/openjpeg/archive/v2.2.0.zip)
+  [проверено 2020-03-27]).
+
+
+
+# Подготовка #
+
+Сборка производится в папку, на которую указывает переменная среды `%XRADThirdParty%`.
+В этой инструкции предполагается, что `XRADThirdParty=Q:\3rd_party`.
+
+1. Создаем папки:
+  - `Q:\3rd_party\openjpeg`
+  - `Q:\3rd_party\openjpeg\src`
+    (папка исходных текстов OpenJPEG; эта папка используется при сборке, и на неё ссылаются `*.pdb`;
+    внешние проекты на неё не ссылаются)
+  - `Q:\3rd_party\openjpeg\build`
+    (папка сборки; эта папка используется только при сборке, внешние проекты на неё не ссылаются)
+  - `Q:\3rd_party\openjpeg\install`
+    (папка результатов сборки; на эту папку ссылаются внешние проекты)
+
+1. Распаковываем из архива `openjpeg-2.2.0.zip` папку `openjpeg-2.2.0` в папку
+  `Q:\3rd_party\openjpeg\src` (подпапку `openjpeg-2.2.0` не создаем).
+
+
+
+# Сборка x86 #
+
+
+
+## Подготовка x86 ##
+
+Готовим папки для сборки.
+
+Создаем папки:
+  - `Q:\3rd_party\openjpeg\build\x86`
+  - `Q:\3rd_party\openjpeg\install\x86`
+
+
+
+## CMake x86 ##
+
+Создаем проект MSVC с помощью cmake.
+
+1. Запускаем cmake-gui.
+
+1. Выбираем папку исходного кода (source code): `Q:/3rd_party/openjpeg/src`.
+
+1. Выбираем папку для сборки (binaries): `Q:/3rd_party/openjpeg/build/x86`.
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Visual Studio 14 2015"
+  - Optional platform: "Win32"
+  - Optional toolset: оставляем пустым
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (порядка 1-1,5 минуты).
+
+1. Заполняем поля:
+
+  - `BUILD_CODEC:BOOL=OFF` (отключаем сборку приложений `*.exe`)
+  - `BUILD_SHARED_LIBS:BOOL=ON` (включаем сборку динамических библиотек `*.dll`)
+  - `CMAKE_INSTALL_PREFIX:PATH=Q:/3rd_party/openjpeg/install/x86/${BUILD_TYPE}`
+    (папка, к которой будут обращаться проекты, использующие OpenJPEG)
+  - `OPJ_USE_THREAD:BOOL=ON` (включаем поддержку многопоточности)
+  - Остальные поля осталяем по умолчанию.
+  - [По старой инструкции были включены также опции BUILD_CODEC=TRUE, BUILD_JPIP=TRUE,
+    BUILD_THIRDPARTY=TRUE. Они не требуются.]
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (меньше секунды).
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (меньше секунды).
+
+1. Закрываем cmake-gui.
+
+
+
+## MSVC x86 ##
+
+1. Запускаем MSVC 2015.
+
+1. Открываем проект `Q:\3rd_party\openjpeg\build\x86\OPENJPEG.sln`.
+
+1. Собираем конфигурацию Debug.
+
+  1. Устанавливаем конфигурацию "Debug | Win32".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 секунд).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (порядка секунды).
+
+1. Собираем конфигурацию Release.
+
+  1. Устанавливаем конфигурацию "Release | Win32".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 секунд).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (порядка секунды).
+
+1. Закрываем проект. Закрываем MSVC 2015.
+
+
+
+## Завершение сборки x86 ##
+
+Для возможности отладки кода OpenJPEG для конфигурации "Debug"`
+вручную скопировать файлы `*.pdb` из папки
+`Q:\3rd_party\openjpeg\build\x86\bin\Debug` в папку
+`Q:\3rd_party\openjpeg\install\x86\Debug\bin`.
+Если отладка не требуется, этот шаг можно пропустить.
+
+Замечание. Для конфигурации "Release" файлы `*.pdb` не генерируются. При необходимости можно собрать
+конфигурацию "RelWithDebInfo" и вручную скопировать `*.dll`, `*.pdb` в папку install.
+(Не проверялось.)
+
+Результаты сборки x86 находятся в папке:
+
+~~~~ none
+OpenJPEGInstallPath = "Q:\3rd_party\openjpeg\install\x86\$(Configuration)"
+Configuration = "Debug" | "Release"
+~~~~
+
+
+
+# Сборка x64 #
+
+
+
+## Подготовка x64 ##
+
+Готовим папки для сборки.
+
+Создаем папки:
+  - `Q:\3rd_party\openjpeg\build\x64`
+  - `Q:\3rd_party\openjpeg\install\x64`
+
+
+
+## CMake x64 ##
+
+Создаем проект MSVC с помощью cmake.
+
+1. Запускаем cmake-gui.
+
+1. Выбираем папку исходного кода (source code): `Q:/3rd_party/openjpeg/src`.
+
+1. Выбираем папку для сборки (binaries): `Q:/3rd_party/openjpeg/build/x64`.
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Visual Studio 14 2015"
+  - Optional platform: "Win32"
+  - Optional toolset: оставляем пустым
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (порядка 1-1,5 минуты).
+
+1. Заполняем поля:
+
+  - `BUILD_CODEC:BOOL=OFF` (отключаем сборку приложений `*.exe`)
+  - `BUILD_SHARED_LIBS:BOOL=ON` (включаем сборку динамических библиотек `*.dll`)
+  - `CMAKE_INSTALL_PREFIX:PATH=Q:/3rd_party/openjpeg/install/x64/${BUILD_TYPE}`
+    (папка, к которой будут обращаться проекты, использующие OpenJPEG)
+  - `OPJ_USE_THREAD:BOOL=ON` (включаем поддержку многопоточности)
+  - Остальные поля осталяем по умолчанию.
+  - [По старой инструкции были включены также опции BUILD_CODEC=TRUE, BUILD_JPIP=TRUE,
+    BUILD_THIRDPARTY=TRUE. Они не требуются.]
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (меньше секунды).
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (меньше секунды).
+
+1. Закрываем cmake-gui.
+
+
+
+## MSVC x64 ##
+
+1. Запускаем MSVC 2015.
+
+1. Открываем проект `Q:\3rd_party\openjpeg\build\x64\OPENJPEG.sln`.
+
+1. Собираем конфигурацию Debug.
+
+  1. Устанавливаем конфигурацию "Debug | Win32".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 секунд).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (порядка секунды).
+
+1. Собираем конфигурацию Release.
+
+  1. Устанавливаем конфигурацию "Release | Win32".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 секунд).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (порядка секунды).
+
+1. Закрываем проект. Закрываем MSVC 2015.
+
+
+
+## Завершение сборки x64 ##
+
+Для возможности отладки кода OpenJPEG для конфигурации "Debug"`
+вручную скопировать файлы `*.pdb` из папки
+`Q:\3rd_party\openjpeg\build\x64\bin\Debug` в папку
+`Q:\3rd_party\openjpeg\install\x64\Debug\bin`.
+Если отладка не требуется, этот шаг можно пропустить.
+
+Замечание. Для конфигурации "Release" файлы `*.pdb` не генерируются. При необходимости можно собрать
+конфигурацию "RelWithDebInfo" и вручную скопировать `*.dll`, `*.pdb` в папку install.
+(Не проверялось.)
+
+Результаты сборки x64 находятся в папке:
+
+~~~~ none
+OpenJPEGInstallPath = "Q:\3rd_party\openjpeg\install\x64\$(Configuration)"
+Configuration = "Debug" | "Release"
+~~~~
+
+
+
+# Замечания по настройке конфигурации #
+
+Включение асинхронной обработки исключений позволяет обработать как исключения ряд "аппаратных"
+ошибок типа обращения к нулевому указателю. Это требует также соответствующей поддержки в
+вызывающем коде.
+
+В папку `CMAKE_INSTALL_PREFIX` помещаются скомпилированные dll, lib, а также копии `*.h`.
+В проектах, использующих OpenJPEG, указывается путь к файлам именно в этой папке примерно в таком
+виде:
+
+~~~~ none
+OpenJPEGInstallPath = "%XRADThirdParty%\openjpeg\install\$(PlatformTarget)\$(Configuration)"
+Configuration = "Debug" | "Release"
+~~~~
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

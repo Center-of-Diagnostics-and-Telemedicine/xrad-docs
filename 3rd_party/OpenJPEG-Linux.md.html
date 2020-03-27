@@ -1,0 +1,102 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Сборка OpenJPEG в Linux**
+
+
+
+# Условные обозначения #
+
+`/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
+  путь, начинающийся с `~/`, трактуется неверно.
+
+
+
+# Инструменты #
+
+OS: Ubuntu 18.04 (WSL).
+
+GCC: версия 9.2.1.
+
+CMake: использовался CMake 3.10.2 (установлено из пакетов).
+
+Библиотеки:
+
+- OpenJPEG (исходные тексты): `openjpeg-2.2.0.zip`
+  ([github:
+  Release OpenJPEG 2.2.0](https://github.com/uclouvain/openjpeg/archive/v2.2.0.zip)
+  [проверено 2020-03-27]).
+
+Замечание. CMake работает неверно, если в качестве пути директории для сборки (binaries) указывать
+путь, начинающийся с `~`. Путь должен быть абсолютным: `/home/{user_name}/...`, где
+`/home/{user_name}` — путь к домашней директории пользователя (`~`).
+То же относится ко многим другим путям, задаваемым в переменных CMake.
+Возможно, дело не в само́м CMake, а в скриптах.
+
+
+
+# Подготовка #
+
+Создаем директории:
+  - `~/dev`
+  - `~/dev-install`
+
+
+
+# Сборка OpenJPEG #
+
+1. Создаем директорию `~/dev/openjpeg`.
+
+1. Распаковаваем содержимое архива `openjpeg-2.2.0.zip` в директорию
+  `~/dev/openjpeg/openjpeg-2.2.0`.
+
+1. Запускаем `cmake-gui`.
+
+1. Выбираем директрию исходного кода (source code): `/home/{user_name}/dev/openjpeg/openjpeg-2.2.0`.
+
+1. Выбираем директорию для сборки (binaries): `/home/{user_name}/dev/openjpeg/build` (CMake
+  предложит создать директорию).
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Unix Makefiles"
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (15-30 секунд).
+
+1. Заполняем поля:
+  - `BUILD_CODEC:BOOL=OFF` (отключаем сборку приложений)
+  - `BUILD_SHARED_LIBS:BOOL=OFF` (отключаем сборку динамических библиотек `*.so`, собираем
+    статические `*.a`) [TODO: Разобраться, что удобнее в работе.]
+  - `CMAKE_BUILD_TYPE:STRING=Release` [TODO: Для сборки Debug-библиотек:
+    `CMAKE_BUILD_TYPE:STRING=Debug`]
+  - `CMAKE_INSTALL_PREFIX:PATH=/home/{user_name}/dev-install`
+  - Остальные поля осталяем по умолчанию.
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (меньше секунды).
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (меньше секунды).
+
+1. Закрываем cmake-gui.
+
+1. Переходим в директорию `~/dev/openjpeg/build`.
+
+1. Запускаем `make`. Ждем завершения сборки (порядка 1 минуты).
+
+1. При успешной сборке появляется файл `~/dev/openjpeg/build/bin/libopenjp2.a`
+  (`libopenjp2.so.2.2.0`).
+
+1. Запускаем `make install`. Ждем завершения установки (несколько секунд).
+
+1. При успешной установке появляется файл `~/dev-install/lib/libopenjp2.a` (`libopenjp2.so.2.2.0`).
+
+
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

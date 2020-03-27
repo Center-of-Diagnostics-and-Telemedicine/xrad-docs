@@ -1,0 +1,64 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Использование VLD при тестировании проектов QMV3**
+
+Рекомендации разработчиков здесь:
+[VLD на github](https://github.com/KindDragon/vld/wiki/Using-Visual-Leak-Detector)
+
+
+
+# Установка #
+
+По сравнению с рекомендациями разработчиков вношу некоторые изменения, которые могут облегчить
+работу:
+
+1. Скачиваем установщик VLD версии 2.5.1 с github:
+  [vld-2.5.1-setup.exe](https://github.com/KindDragon/vld/releases/download/v2.5.1/vld-2.5.1-setup.exe).
+
+1. Устанавливаем VLD в директорию по умолчанию.
+
+1. Перелогиниваемся, чтобы новые пути в PATH применились для всех приложений. Можно это сделать
+  позже.
+
+1. Из директории "C:\ProgramFiles (x86)\Visual Leak Detector\" копируем папки bin, include, lib в
+  "Q\3rd_party\vld".
+
+1. В папках bin и lib переименовываем подпапки Win32-&gt;x86, Win64-&gt;x64. Это делается для
+  упрощения конфигурирования проектов.
+
+Возможна проблема: Версии файлов в Program Files и в "Q:\3rd_party\vld" будут различаться. Сейчас
+часть берётся из Program Files, другая часть из "Q:\3rd_party\vld". Было бы хорошо держать в одном
+месте и настраивать на него.
+
+# Использование #
+
+1. Предполагается, что проект использует QMLibBasic и включает `QMLibBasic.props`.
+
+1. <div class="obsolete">(Эта настройка больше не требуется при использовании `QMLibBasic.props`)
+  В настройки проекта исполняемого файла и dll (только в них, не в lib) вносим следующие
+  изменения:
+  - ProjectSettings-&gt;Linker-&gt;General-&gt;Additional Library Directories добавляем путь
+    "Q:\3rd_party\vld\lib\$(PlatformTarget)".
+  - ProjectSettings-&gt;C/C++-&gt;General-&gt;Additional Include Directories добавляем путь
+    "Q:\3rd_party\vld\include".</div>
+
+1. В любой исходный файл проекта добавляем `#include &lt;vld.h&gt;` (но не в "pre.h").
+
+Примечание. Разработчики vld позаботились о том, чтобы их библиотека работала только в debug
+режиме, поэтому можно по этому поводу не думать.
+
+Примечание. Настройки для использования VLD добавлены в `QMLibBasic.props`. В этом случае
+соответствующие возможности появляются сразу во всех проектах, которые его включают.
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+.obsolete {
+  color: gray;
+  text-decoration: line-through;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

@@ -1,0 +1,287 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Сборка DCMTK в Linux**
+
+
+
+# Условные обозначения #
+
+`/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
+  путь, начинающийся с `~/`, трактуется неверно.
+
+
+
+# Обоснование выбора конфигурации #
+
+Для сборки библиотеки DCMTK требуется следующий набор сторонних библиотек:
+- Zlib
+- OpenSSL
+- библиотека преобразования кодировок текста (iconv системная, libiconv внешняя или ICU)
+
+Остальные библиотеки используются только в приложениях, для сборки библиотеки DCMTK они
+не требуются.
+
+Лицензия libiconv (LGPL) существенно усложняет
+распространение продукта в организационном плане (требуется размещения исходников библиотек,
+чтобы пользователь мог заменить используемую библиотеку libiconv на другую версию этой библиотеки).
+
+ICU имеет достаточно свободную лицензию.
+
+При использовании системной iconv мы её не распространяем, ограничения LGPL несущественны.
+
+
+
+# Инструменты #
+
+OS: Ubuntu 18.04 (WSL).
+
+GCC: версия 9.2.1.
+
+CMake: использовался CMake 3.10.2 (установлено из пакетов).
+
+Библиотеки:
+
+- DCMTK (исходные тексты): `dcmtk-3.6.2.tar.gz`
+  ([dcmtk.org:
+  download DCMTK 3.6.2](https://www.dcmtk.org/download/dcmtk/dcmtk362/)
+  [проверено 2020-01-09]).
+- Сторонние библиотеки для DCMTK (исходные тексты):
+  - Zlib: `zlib-1.2.11.tar.gz`
+    ([zlib.net: fossils](https://www.zlib.net/fossils/)
+    [проверено 2020-01-09],
+    для сборки требуется CMake)
+  - OpenSSL: `openssl-1.1.0f.tar.gz`
+    ([openssl.org](https://ftp.openssl.org/source/old/1.1.0/)
+    [проверено 2020-01-09])
+
+Замечание. CMake работает неверно, если в качестве пути директории для сборки (binaries) указывать
+путь, начинающийся с `~`. Путь должен быть абсолютным: `/home/{user_name}/...`, где
+`/home/{user_name}` — путь к домашней директории пользователя (`~`).
+То же относится ко многим другим путям, задаваемым в переменных CMake.
+Возможно, дело не в само́м CMake, а в скриптах.
+
+
+
+# Подготовка #
+
+Создаем директории:
+  - `~/dev`
+  - `~/dev-install`
+
+
+
+# Сборка zlib #
+
+1. Создаем директорию `~/dev/zlib`.
+
+1. Распаковаваем содержимое архива `zlib-1.2.11.tar.gz` в директорию `~/dev/zlib/zlib-1.2.11`.
+
+1. Запускаем `cmake-gui`.
+
+1. Выбираем директрию исходного кода (source code): `/home/{user_name}/dev/zlib/zlib-1.2.11`.
+
+1. Выбираем директорию для сборки (binaries): `/home/{user_name}/dev/zlib/build` (CMake предложит
+  создать директорию).
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Unix Makefiles"
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (15 секунд).
+
+1. Заполняем поля:
+
+  - `CMAKE_INSTALL_PREFIX:PATH=~/dev-install` (установку скомпилированных библиотек производим
+    в домашнюю директорию пользователя)
+  - `INSTALL_BIN_DIR:PATH=~/dev-install/bin`
+  - `INSTALL_INC_DIR:PATH=~/dev-install/include`
+  - `INSTALL_LIB_DIR:PATH=~/dev-install/lib`
+  - `INSTALL_MAN_DIR:PATH=~/dev-install/share/man`
+  - `INSTALL_PKGCONFIG_DIR:PATH=~/dev-install/share/pkgconfig`
+
+1. TODO: Подумать над заполнением полей `AMD64`, `ASM686`.
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (меньше секунды).
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (меньше секунды).
+
+1. Закрываем cmake-gui.
+
+1. Переходим в директорию `~/dev/zlib/build`.
+
+1. Запускаем `make`. Ждем завершения сборки (порядка 30 секунд).
+
+1. При успешной сборке появляется файл `~/dev/zlib/build/libz.a` (`libz.so.1.2.11`).
+
+1. Запускаем `make install`. Ждем завершения установки (несколько секунд).
+
+1. При успешной установке появляется файл `~/dev-install/lib/libz.a` (`libz.so.1.2.11`).
+
+
+
+# Сборка OpenSSL #
+
+1. Создаем директорию `~/dev/openssl`.
+
+1. Распаковаваем содержимое архива `openssl-1.1.0f.tar.gz` в директорию
+  `~/dev/openssl/openssl-1.1.0f`.
+
+1. Создаем директорию `~/dev/openssl/build`.
+
+1. Запускаем:
+
+  ~~~~ none
+  $ ../openssl-1.1.0f/config --prefix=/home/{user_name}/dev-install \
+    --openssldir=/home/{user_name}/dev-install/ssl
+  ~~~~
+
+  Замечание. Задать в качестве пути `~/dev-install` нельзя, скрипт конфигурации требует абсолютные
+  пути.
+
+  TODO: `--debug`, `--zlib`
+
+1. Ждем завершения процесса (несколько секунд).
+
+1. Запускаем `make`. Ждем завершения процесса (10-15 минут).
+
+1. Запускаем `make test`. Ждем завершения просецца (5-10 минут). Согласно руководству OpenSSL,
+  эта стадия, запуск тестов, не является обязательной, но очень рекомендуется.
+
+1. Запускаем `make install`. Ждем завершения процесса (3-4 минуты).
+
+1. При успешной установке появляются файлы `~/dev-install/lib/libssl.a` (`libssl.so.1.1`),
+  `libcrypto.a` (`libcrypto.so.1.1`).
+
+
+
+# Сборка DCMTK #
+
+1. Создаем директорию `~/dev/dcmtk`.
+
+1. Распаковаваем содержимое архива `dcmtk-3.6.2.tar.gz` в директорию `~/dev/dcmtk/dcmtk-3.6.2`.
+
+1. Запускаем `cmake-gui`.
+
+1. Выбираем директрию исходного кода (source code): `/home/{user_name}/dev/dcmtk/dcmtk-3.6.2`.
+
+1. Выбираем директорию для сборки (binaries): `/home/{user_name}/dev/dcmtk/build`
+  (CMake предложит создать директорию).
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Unix Makefiles"
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (3-5 минут).
+
+1. Процесс может завершиться ошибкой:
+
+  ~~~~ none
+  CMake Error at CMake/GenerateDCMTKConfigure.cmake:1249 (MESSAGE):
+    Inspecting fundamental arithmetic types...
+
+    --
+
+    -- TRAPS MODULO
+
+    -- char yes yes
+
+    -- signed char yes yes
+
+    -- unsigned char yes yes
+
+    -- signed short yes yes
+
+    -- unsigned short yes yes
+
+    -- signed int yes yes
+
+    -- unsigned int yes yes
+
+    -- signed long yes yes
+
+    -- unsigned long yes yes
+
+    --
+
+    -- float double
+
+    -- TRAPS no no
+
+    -- HAS INFINITY yes yes
+
+    -- QUIET NAN yes yes
+
+  Call Stack (most recent call first):
+    CMakeLists.txt:53 (INSPECT_FUNDAMENTAL_ARITHMETIC_TYPES)
+  ~~~~
+
+  (Эта ошибка возникает в Ubuntu 18.04 / Windows Subsystem for Linux.
+  Неверные операции с плавающей точкой вызывают аварийное завершение программы
+  даже при установленных обработчиках сигналов.)
+
+  В этом случае нельзя перезапускать процесс конфигурации, не устранив причину ошибки. Иначе
+  получается неправильный заголовочный файл конфигурации DCMTK, библиотека не скомпилируется.
+
+  На данный момент возможно такое быстрое решение. Заменяем в исходных текстах DCMTK файл
+  `config/tests/arith.cc` на файл `dcmtk-3.6.2-err/arith.cc.patched`, приложенный к данной
+  документации. Фактически производим замену в строке 359:
+
+  ~~~~ none
+  - int flag = dcmtk_config_math::isnan( t ) && test_trap( &provoke_snan<T> );
+  + int flag = dcmtk_config_math::isnan( t ) /*&& test_trap( &provoke_snan<T> )*/;
+  ~~~~
+
+  TODO: Разобраться с проблемой. Понять, какой результат должна возвращать функция,
+  и почему не работает обработка сигналов.
+
+1. Заполняем поля:
+
+  - `BUILD_APPS:BOOL=OFF` (отключаем создание приложений: они требуют дополнительных библиотек)
+  - `BUILD_SHARED_LIBS:BOOL=OFF` (откключаем сборку динамических библиотек `*.so`, собираем
+    статические `*.a`) [TODO: Разобраться, что удобнее в работе.]
+  - `CMAKE_BUILD_TYPE:STRING=Release` [TODO: Для сборки Debug-библиотек:
+    `CMAKE_BUILD_TYPE:STRING=Debug`]
+  - [TODO: `CMAKE_CXX_FLAGS:STRING=?` (добавить C++17?)]
+  - `CMAKE_INSTALL_PREFIX:PATH=/home/{user_name}/dev-install`
+  - `DCMTK_ENABLE_CHARSET_CONVERSION:STRING=stdlibc (iconv)` (использовать для преобразования
+    кодировок стандартную библиотеку iconv)
+  - `DCMTK_ENABLE_CXX11:BOOL=ON` (использовать move-семантику и т.п.)
+  - `DCMTK_ENABLE_PRIVATE_TAGS:BOOL=ON` (разрешает использовать DICOM private tags)
+  - `DCMTK_ENABLE_STL:BOOL=ON` (включает использование в DCMTK string, vector и т.д.)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_STDLIBC_ICONV:BOOL=ON` (использовать стандартную библиотеку iconv)
+  - `DCMTK_WITH_THREADS:BOOL=ON` (поддерживать многопоточную работу; по умолчанию включено)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+  - Остальные поля оставляем по умолчанию.
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (около полминуты).
+
+1. Проверяем результат, что всё прошло успешно.
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (несколько секунд).
+
+1. Переходим в директорию `~/dev/dcmtk/build`.
+
+1. Закрываем cmake-gui.
+
+1. Запускаем `make`. Ждем завершения процесса (1-1,5 часа).
+
+1. Запускаем `make install`. Ждем завершения процесса (1-2 минуты).
+
+1. При успешной установке появляются файлы `~/dev-install/lib/libdcmdata.a`
+  и другие файлы библиотеки DCMTK.
+
+
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

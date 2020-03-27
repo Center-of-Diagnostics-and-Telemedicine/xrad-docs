@@ -1,0 +1,69 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Список сторонних продуктов**
+
+
+
+# GUI #
+
+- Qt. Используется для GUI. Лицензии: LGPL v2.1 с исключением, v3.
+
+  Смысл исключения "The Qt Company Qt LGPL Exception version 1.1" в том, что явно позволяется
+  использовать скомпилированные dll библиотеки Qt в собственном приложении, не открывая исходного
+  кода самого приложения. Предполагается стандартный способ подключения Qt в виде dll.
+  Остальные положения LGPL должны выполняться.
+
+  Замечание. QtWebKit может использовать библиотеку ICU, которая используется в DCMTK.
+
+  См. "Qt.odt".
+
+- Qwt. Используется для GUI. Лицензия: LGPL 2.1 с исключениями и дополнениями, см. COPYING.
+  Допускает использование в виде dll без раскрытия исходного кода приложения.
+  Требует упоминания в документации.
+
+  См. "Qwt.odt".
+
+
+
+# DICOM #
+
+- DCMTK. Используется для доступа к данным в формате DICOM.
+
+  См. [DCMTK в Windows](DCMTK.md.html), [DCMTK в Linux](DCMTK-Linux.md.html).
+
+  Лицензии:
+  - Лицензия на саму библиотеку DCMTK позволяет коммерческое использование без раскрытия исходного
+    кода приложения.
+  - Лицензии сторонних библиотек различаются. В основном лицензии на библиотеки не накладывают
+    существенных ограничений.
+    Исключение: библиотека libiconv с лицензией LGPL. Вместо libiconv можно использовать библиотеку
+    ICU с более свободной лицензией.
+
+- OpenJPEG. Используется для доступа к изображениям в DICOM с кодеком JPEG 2000. Лицензия:
+  BSD-style.
+
+  См. [OpenJPEG в Windows](OpenJPEG.md.html), [OpenJPEG в Linux](OpenJPEG-Linux.md.html).
+
+
+
+# Отладка #
+
+- VLD. Используется для поиска утечек памяти. Линкуется только в отладочных сборках.
+
+  См. [VLD](VLD.md.html).
+
+
+
+# Система #
+
+- MSVC runtime.
+- Universal CRT (Microsoft).
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

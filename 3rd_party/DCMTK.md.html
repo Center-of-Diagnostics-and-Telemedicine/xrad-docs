@@ -1,0 +1,446 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Сборка DCMTK с библиотекой ICU в Windows**
+
+
+
+# Обоснование выбора конфигурации #
+
+Для сборки библиотеки DCMTK требуется следующий набор сторонних библиотек:
+- Zlib
+- OpenSSL
+- ICU
+
+Остальные библиотеки используются только в приложениях (`*.exe`), для сборки библиотеки DCMTK они
+не требуются.
+
+Вместо ICU может использоваться libiconv, но её лицензия (LGPL) существенно усложняет
+распространение продукта в организационном плане (требуется размещения исходников библиотек,
+чтобы пользователь мог заменить используемую библиотеку libiconv на другую версию этой библиотеки).
+
+
+
+# Инструменты #
+
+Компилятор: MSVC 2015. [TODO: Перейти на MSVC 2019.]
+
+CMake: использовался CMake 3.16.2 `cmake-3.16.2-win32-x86`
+([cmake.org](https://cmake.org/download/) [проверено 2020-01-09]).
+
+Библиотеки:
+
+- DCMTK (исходные тексты): `dcmtk-3.6.2.tar.gz`
+  ([dcmtk.org:
+  download DCMTK 3.6.2](https://www.dcmtk.org/download/dcmtk/dcmtk362/)
+  [проверено 2020-01-09]).
+- Сторонние библиотеки для DCMTK (предварительно собранные для MSVC 2015):
+  - OpenSSL, Zlib
+    ([dcmtk.org:
+    download DCMTK 3.6.2 / support](https://www.dcmtk.org/download/dcmtk/dcmtk362/support/)
+    [проверено 2020-01-09]):
+    - `dcmtk-3.6.2-win32-support_MD-msvc-14.0.zip`
+    - `dcmtk-3.6.2-win64-support_MD-msvc-14.0.zip`
+  - ICU
+    ([ICU на github](https://github.com/unicode-org/icu/releases/tag/release-64-2)
+    [проверено 2020-01-09]):
+    - `icu4c-64_2-Win32-MSVC2017.zip`
+    - `icu4c-64_2-Win64-MSVC2017.zip`
+
+Исходные тексты библиотек (не используются при сборке):
+
+- OpenSSL: `openssl-1.1.0f.tar.gz`
+  ([openssl.org](https://ftp.openssl.org/source/old/1.1.0/)
+  [проверено 2020-01-09],
+  для сборки требуется Perl и MSVC)
+- Zlib: `zlib-1.2.11.tar.gz`
+  ([zlib.net: fossils](https://www.zlib.net/fossils/)
+  [проверено 2020-01-09],
+  для сборки требуется CMake и MSVC)
+- ICU: `icu-release-64-2.tar.gz`
+  ([ICU на github](https://github.com/unicode-org/icu/releases/tag/release-64-2)
+  [проверено 2020-01-09],
+  для сборки требуется среда Cygwin и MSVC)
+
+
+
+# Подготовка #
+
+Сборка производится в папку, на которую указывает переменная среды `%XRADThirdParty%`.
+В этой инструкции предполагается, что `XRADThirdParty=Q:\3rd_party`.
+
+1. Создаем папки:
+  - `Q:\3rd_party\dcmtk-icu`
+  - `Q:\3rd_party\dcmtk-icu\src`
+    (папка исходных текстов DCMTK; эта папка используется при сборке, и на неё ссылаются `*.pdb`;
+    внешние проекты на неё не ссылаются)
+  - `Q:\3rd_party\dcmtk-icu\externals`
+    (папка внешних библиотек; на эту папку ссылаются внешние проекты)
+  - `Q:\3rd_party\dcmtk-icu\build`
+    (папка сборки; эта папка используется только при сборке, внешние проекты на неё не ссылаются)
+  - `Q:\3rd_party\dcmtk-icu\install`
+    (папка результатов сборки; на эту папку ссылаются внешние проекты)
+
+1. Распаковываем из архива `dcmtk-3.6.2.tar.gz` папку `dcmtk-3.6.2` в папку
+  `Q:\3rd_party\dcmtk-icu\src` (подпапку `dcmtk-3.6.2` не создаем).
+
+1. Исправляем файл `Q:\3rd_party\dcmtk-icu\src\dcmnet\apps\CMakeLists.txt`:
+
+  Исходное содержимое:
+  ~~~~ none
+  # declare installation files
+  IF(WITH_OPENSSL)
+    IF(WIN32)
+      INSTALL(FILES "${OPENSSL_BINDIR}/dcmtkeay.dll" "${OPENSSL_BINDIR}/dcmtkssl.dll" DESTINATION "${DCMTK_INSTALL_BINDIR}" COMPONENT bin)
+    ENDIF(WIN32)
+  ENDIF(WITH_OPENSSL)
+  ~~~~
+
+  Исправленное содержимое:
+  ~~~~ none
+  # declare installation files
+  IF(WITH_OPENSSL)
+    IF(WIN32)
+      IF(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
+        INSTALL(FILES "${OPENSSL_BINDIR}/dcmtkcrypto-1_1-x64.dll" "${OPENSSL_BINDIR}/dcmtkssl-1_1-x64.dll" DESTINATION "${DCMTK_INSTALL_BINDIR}" COMPONENT bin)
+      ELSE(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
+        INSTALL(FILES "${OPENSSL_BINDIR}/dcmtkcrypto-1_1.dll" "${OPENSSL_BINDIR}/dcmtkssl-1_1.dll" DESTINATION "${DCMTK_INSTALL_BINDIR}" COMPONENT bin)
+      ENDIF(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
+    ENDIF(WIN32)
+  ENDIF(WITH_OPENSSL)
+  ~~~~
+
+
+
+# Сборка x86 #
+
+
+
+## Подготовка x86 ##
+
+Готовим папки и сторонние библиотеки для сборки.
+
+1. Создаем папки:
+  - `Q:\3rd_party\dcmtk-icu\externals\x86`
+  - `Q:\3rd_party\dcmtk-icu\build\x86`
+  - `Q:\3rd_party\dcmtk-icu\install\x86`
+
+1. Распаковываем из архива
+  `dcmtk-3.6.2-win32-support_MD-msvc-14.0.zip` папку
+  `dcmtk-3.6.2-win32-support_MD-msvc-14.0\zlib-1.2.11`
+  в папку `Q:\3rd_party\dcmtk-icu\externals\x86\zlib-1.2.11`.
+
+1. Распаковываем из архива
+  `dcmtk-3.6.2-win32-support_MD-msvc-14.0.zip` папку
+  `dcmtk-3.6.2-win32-support_MD-msvc-14.0\openssl-1.1.0f`
+  в папку `Q:\3rd_party\dcmtk-icu\externals\x86\openssl-1.1.0f`.
+
+1. Распаковываем содержимое архива
+  `icu4c-64_2-Win32-MSVC2017.zip`
+  в папку `Q:\3rd_party\dcmtk-icu\externals\x86\icu4c-64_2`.
+
+
+
+## CMake x86 ##
+
+Создаем проект MSVC с помощью cmake.
+
+1. Запускаем cmake-gui.
+
+1. Выбираем папку исходного кода (source code): `Q:/3rd_party/dcmtk-icu/src`.
+
+1. Выбираем папку для сборки (binaries): `Q:/3rd_party/dcmtk-icu/build/x86`.
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Visual Studio 14 2015"
+  - Optional platform: "Win32"
+  - Optional toolset: оставляем пустым
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (5—10 минут).
+
+1. Заполняем поля:
+
+  - `BUILD_APPS:BOOL=OFF` (отключаем создание приложений: они требуют дополнительных библиотек)
+  - `BUILD_SHARED_LIBS:BOOL=ON` (включаем сборку dll, а не статических lib)
+  - `CMAKE_CXX_FLAGS:STRING=/DWIN32 /D_WINDOWS /W3 /GR /EHa` (меняем способ обработки исключений
+    с синхронного `/EHsc` на асинхронный `/EHa`)
+  - `CMAKE_INSTALL_PREFIX:PATH=Q:/3rd_party/dcmtk-icu/install/x86/${BUILD_TYPE}` (папка, к которой
+    будут обращаться проекты, использующие DCMTK)
+  - `DCMTK_ENABLE_CXX11:BOOL=ON` (использовать move-семантику и т.п.)
+  - `DCMTK_ENABLE_PRIVATE_TAGS:BOOL=ON` (разрешает использовать DICOM private tags)
+  - `DCMTK_ENABLE_STL:BOOL=ON` (включает использование в DCMTK string, vector и т.д.)
+  - `DCMTK_WIDE_CHAR_FILE_IO_FUNCTIONS:BOOL=ON` (включает использование интерфейсов с wchar_t для
+    поддержки Unicode при работе с именами файлов)
+  - `DCMTK_WIDE_CHAR_MAIN_FUNCTION:BOOL=ON` (устанавливается в паре с
+    `DCMTK_WIDE_CHAR_FILE_IO_FUNCTIONS`, в отсутствие `BUILD_APPS` не используется)
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_THREADS:BOOL=ON` (поддерживать многопоточную работу; по умолчанию включено)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+  - Важно: библиотеку iconv не подключаем.
+  - Остальные поля оставляем по умолчанию.
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (около полминуты).
+
+1. Заполняем некоторые изменившиеся поля и новые поля:
+
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+  - `ICU_DATA_LIBRARY_*=Q:/3rd_party/dcmtk-icu/externals/x86/icu4c-64_2/lib/icudt.lib`
+  - `ICU_INCLUDE_DIR=Q:/3rd_party/dcmtk-icu/externals/x86/icu4c-64_2/include`
+  - `ICU_UC_LIBRARY_*=Q:/3rd_party/dcmtk-icu/externals/x86/icu4c-64_2/lib/icuuc.lib`
+  - `WITH_OPENSSLINC=Q:/3rd_party/dcmtk-icu/externals/x86/openssl-1.1.0f`
+  - `WITH_ZLIBINC:PATH=Q:/3rd_party/dcmtk-icu/externals/x86/zlib-1.2.11`
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (несколько секунд).
+
+1. Проверяем результат. Если всё прошло успешно, следующие флаги должны остаться включенными
+  (если это не так, ищем и исправляем ошибку):
+
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+
+1. Заполняем следующее поле:
+
+  - `DCMTK_ENABLE_CHARSET_CONVERSION:STRING=ICU`
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (несколько секунд).
+
+1. Проверяем результат. Если всё прошло успешно, следующие флаги должны остаться включенными
+  (если это не так, ищем и исправляем ошибку):
+
+  - `DCMTK_ENABLE_CHARSET_CONVERSION:STRING=ICU`
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (несколько секунд).
+
+1. Закрываем cmake-gui.
+
+
+
+## MSVC x86 ##
+
+1. Запускаем MSVC 2015.
+
+1. Открываем проект `Q:\3rd_party\dcmtk-icu\build\x86\DCMTK.sln`.
+
+1. Собираем конфигурацию Debug.
+
+  1. Устанавливаем конфигурацию "Debug | Win32".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 минут).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (несколько секунд).
+
+1. Собираем конфигурацию Release.
+
+  1. Устанавливаем конфигурацию "Release | Win32".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 минут).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (несколько секунд).
+
+1. Закрываем проект. Закрываем MSVC 2015.
+
+
+
+## Завершение сборки x86 ##
+
+Для возможности отладки кода DCMTK для конфигурации
+`DCMTKConfiguration = "Debug"`
+вручную скопировать файлы `*.pdb` из папки
+`Q:\3rd_party\dcmtk-icu\build\x86\bin\$(DCMTKConfiguration)` в папку
+`Q:\3rd_party\dcmtk-icu\install\x86\$(DCMTKConfiguration)\bin`.
+Если отладка не требуется, этот шаг можно пропустить.
+
+Замечание. Для конфигурации "Release" файлы `*.pdb` не генерируются. При необходимости можно собрать
+конфигурацию "RelWithDebInfo" и вручную скопировать `*.dll`, `*.pdb` в папку install.
+(Не проверялось.)
+
+Результаты сборки x86 находятся в папке:
+
+~~~~ none
+DCMTKInstallPath = "Q:\3rd_party\dcmtk-icu\install\x86\$(DCMTKConfiguration)"
+DCMTKConfiguration = "Debug" | "Release"
+~~~~
+
+
+
+# Сборка x64 #
+
+
+
+## Подготовка x64 ##
+
+Готовим папки и сторонние библиотеки для сборки.
+
+1. Создаем папки:
+  - `Q:\3rd_party\dcmtk-icu\externals\x64`
+  - `Q:\3rd_party\dcmtk-icu\build\x64`
+  - `Q:\3rd_party\dcmtk-icu\install\x64`
+
+1. Распаковываем в папку `Q:\3rd_party\dcmtk-icu\externals\x64\zlib-1.2.11` из архива
+  `dcmtk-3.6.2-win64-support_MD-msvc-14.0.zip` папку
+  `dcmtk-3.6.2-win64-support_MD-msvc-14.0\zlib-1.2.11`.
+
+1. Распаковываем в папку `Q:\3rd_party\dcmtk-icu\externals\x64\openssl-1.1.0f` из архива
+  `dcmtk-3.6.2-win64-support_MD-msvc-14.0.zip` папку
+  `dcmtk-3.6.2-win64-support_MD-msvc-14.0\openssl-1.1.0f`.
+
+1. Распаковываем в папку `Q:\3rd_party\dcmtk-icu\externals\x64\icu4c-64_2` содержимое архива
+  `icu4c-64_2-Win64-MSVC2017.zip`.
+
+
+
+## CMake x64 ##
+
+Создаем проект MSVC с помощью cmake.
+
+1. Запускаем cmake-gui.
+
+1. Выбираем папку исходного кода (source code): `Q:/3rd_party/dcmtk-icu/src`.
+
+1. Выбираем папку для сборки (binaries): `Q:/3rd_party/dcmtk-icu/build/x64`.
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Visual Studio 14 2015"
+  - Optional platform: "x64"
+  - Optional toolset: оставляем пустым
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (5—10 минут).
+
+1. Заполняем поля:
+
+  - `BUILD_APPS:BOOL=OFF` (отключаем создание приложений: они требуют дополнительных библиотек)
+  - `BUILD_SHARED_LIBS:BOOL=ON` (включаем сборку dll, а не статических lib)
+  - `CMAKE_CXX_FLAGS:STRING=/DWIN32 /D_WINDOWS /W3 /GR /EHa` (меняем способ обработки исключений
+    с синхронного `/EHsc` на асинхронный `/EHa`)
+  - `CMAKE_INSTALL_PREFIX:PATH=Q:/3rd_party/dcmtk-icu/install/x64/${BUILD_TYPE}` (папка, к которой
+    будут обращаться проекты, использующие DCMTK)
+  - `DCMTK_ENABLE_CXX11:BOOL=ON` (использовать move-семантику и т.п.)
+  - `DCMTK_ENABLE_PRIVATE_TAGS:BOOL=ON` (разрешает использовать DICOM private tags)
+  - `DCMTK_ENABLE_STL:BOOL=ON` (включает использование в DCMTK string, vector и т.д.)
+  - `DCMTK_WIDE_CHAR_FILE_IO_FUNCTIONS:BOOL=ON` (включает использование интерфейсов с wchar_t для
+    поддержки Unicode при работе с именами файлов)
+  - `DCMTK_WIDE_CHAR_MAIN_FUNCTION:BOOL=ON` (устанавливается в паре с
+    `DCMTK_WIDE_CHAR_FILE_IO_FUNCTIONS`, в отсутствие `BUILD_APPS` не используется)
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_THREADS:BOOL=ON` (поддерживать многопоточную работу; по умолчанию включено)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+  - Важно: библиотеку iconv не подключаем.
+  - Остальные поля оставляем по умолчанию.
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (около полминуты).
+
+1. Заполняем некоторые изменившиеся поля и новые поля:
+
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+  - `ICU_DATA_LIBRARY_*=Q:/3rd_party/dcmtk-icu/externals/x64/icu4c-64_2/lib64/icudt.lib`
+  - `ICU_INCLUDE_DIR=Q:/3rd_party/dcmtk-icu/externals/x64/icu4c-64_2/include`
+  - `ICU_UC_LIBRARY_*=Q:/3rd_party/dcmtk-icu/externals/x64/icu4c-64_2/lib64/icuuc.lib`
+  - `WITH_OPENSSLINC=Q:/3rd_party/dcmtk-icu/externals/x64/openssl-1.1.0f`
+  - `WITH_ZLIBINC:PATH=Q:/3rd_party/dcmtk-icu/externals/x64/zlib-1.2.11`
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (несколько секунд).
+
+1. Проверяем результат. Если всё прошло успешно, следующие флаги должны остаться включенными
+  (если это не так, ищем и исправляем ошибку):
+
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+
+1. Заполняем следующее поле:
+
+  - `DCMTK_ENABLE_CHARSET_CONVERSION:STRING=ICU`
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (несколько секунд).
+
+1. Проверяем результат. Если всё прошло успешно, следующие флаги должны остаться включенными
+  (если это не так, ищем и исправляем ошибку):
+
+  - `DCMTK_ENABLE_CHARSET_CONVERSION:STRING=ICU`
+  - `DCMTK_WITH_ICU:BOOL=ON` (использовать библиотеку ICU для преобразования кодировок)
+  - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
+  - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (несколько секунд).
+
+1. Закрываем cmake-gui.
+
+
+
+## MSVC x64 ##
+
+1. Запускаем MSVC 2015.
+
+1. Открываем проект `Q:\3rd_party\dcmtk-icu\build\x64\DCMTK.sln`.
+
+1. Собираем конфигурацию Debug.
+
+  1. Устанавливаем конфигурацию "Debug | x64".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 минут).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (несколько секунд).
+
+1. Собираем конфигурацию Release.
+
+  1. Устанавливаем конфигурацию "Release | x64".
+  1. Выполняем "Build solution". Ждем завершения процесса (около 15 минут).
+  1. Для проекта "INSTALL" выполняем "Build". Ждем завершения процесса (несколько секунд).
+
+1. Закрываем проект. Закрываем MSVC 2015.
+
+
+
+## Завершение сборки x64 ##
+
+Для возможности отладки кода DCMTK для конфигурации
+`DCMTKConfiguration = "Debug"`
+вручную скопировать файлы `*.pdb` из папки
+`Q:\3rd_party\dcmtk-icu\build\x64\bin\$(DCMTKConfiguration)` в папку
+`Q:\3rd_party\dcmtk-icu\install\x64\$(DCMTKConfiguration)\bin`.
+Если отладка не требуется, этот шаг можно пропустить.
+
+Замечание. Для конфигурации "Release" файлы `*.pdb` не генерируются. При необходимости можно собрать
+конфигурацию "RelWithDebInfo" и вручную скопировать `*.dll`, `*.pdb` в папку install.
+(Не проверялось.)
+
+Результаты сборки x64 находятся в папке:
+
+~~~~ none
+DCMTKInstallPath = "Q:\3rd_party\dcmtk-icu\install\x64\$(DCMTKConfiguration)"
+DCMTKConfiguration = "Debug" | "Release"
+~~~~
+
+
+
+# Замечания по настройке конфигурации #
+
+Включение асинхронной обработки исключений позволяет обработать как исключения ряд "аппаратных"
+ошибок типа обращения к нулевому указателю. Это требует также соответствующей поддержки в
+вызывающем коде.
+
+В папку `CMAKE_INSTALL_PREFIX` помещаются скомпилированные dll, lib, а также копии `*.h`.
+В проектах, использующих DCMTK, указывается путь к файлам именно в этой папке примерно в таком виде:
+
+~~~~ none
+DCMTKInstallPath = "%XRADThirdParty%\dcmtk\install\$(PlatformTarget)\$(DCMTKConfiguration)"
+DCMTKConfiguration = "Debug" | "Release"
+~~~~
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
