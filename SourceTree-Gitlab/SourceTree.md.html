@@ -1,0 +1,92 @@
+﻿<meta charset="utf-8">
+<meta lang="ru">
+
+**Работа с приложением SourceTree для управления проектами на Gitlab**
+
+# Введение (терминология)
+![Окно приложения Sourcetree](sourcetree_00.png)
+
+[GitLab](https://about.gitlab.com/) — веб-инструмент жизненного цикла [DevOps](https://ru.wikipedia.org/wiki/DevOps) с открытым 
+исходным кодом, представляющий систему управления репозиториями кода для [Git](https://ru.wikipedia.org/wiki/Git) с собственной вики, 
+системой отслеживания ошибок, CI/CD пайплайном и другими функциями (информация из [wikipedia](https://ru.wikipedia.org/wiki/GitLab)).
+Наш [НПКЦ](http://medradiology.moscow/kontakty) является одним из пользователем сервисов [GitLab](https://ru.wikipedia.org/wiki/GitLab),
+доступных по ссылке [https://yc-gitlab.npcmr.ru](https://yc-gitlab.npcmr.ru) для зарегистрированных пользователей.
+Работа с сервисами через WEB интерфейс достаточно трудоемка. Для облегчения работы используется приложение с 
+графическим интерфейсом (GUI) приложения  [Sourcetree](https://sourcetreeapp.com/).
+
+
+[DevOps](https://ru.wikipedia.org/wiki/DevOps) - методология активного взаимодействия специалистов 
+по разработке со специалистами по информационно-технологическому обслуживанию и взаимная 
+интеграция их рабочих процессов друг  в друга для обеспечения качества продукта. 
+Предназначена для эффективной организации создания и обновления программных продуктов и услуг. 
+Основана на идее тесной взаимозависимости создания продукта и эксплуатации программного обеспечения, 
+которая прививается команде как культура создания продукта.
+
+[Git](https://ru.wikipedia.org/wiki/Git) (произносится «гит») — распределённая система управления версиями
+
+![Окно приложения TortoiseHg](TortoiseHg_00.png)
+
+Исторически [Отдел разработки средств медицинской визуализации](http://medradiology.moscow/struktura-i-organy-upravleniya-obrazovatelnoy-organizatsiyey)
+использовал систему контроля версий [Mercurial](https://www.mercurial-scm.org/) через GUI приложения [TortoiseHg](https://tortoisehg.bitbucket.io/).
+Приложение [TortoiseHg](https://tortoisehg.bitbucket.io/) позволяло интуитивно понятным способом управлять репозиториями проектов.
+
+В настоящее время возникла задача миграции с  [Mercurial](https://www.mercurial-scm.org/) на [GitLab](https://about.gitlab.com/)
+с использованием GUI приложения  [Sourcetree](https://sourcetreeapp.com/).
+
+
+
+# Установка приложения [Sourcetree](https://sourcetreeapp.com/) #
+
+1. Загрузить приложение с сайта разработчиков [https://sourcetreeapp.com](https://sourcetreeapp.com/).
+2. Провести установку на рабочий PC (personal computer) (какие шаги при установке)
+
+# Creating a personal access token #
+![Создание Access Tokens](screenshort00_gitlab_Token.png)
+
+На сайте [https://yc-gitlab.npcmr.ru](https://yc-gitlab.npcmr.ru/).
+You can create as many personal access tokens as you like from your GitLab profile:
+1. Log in to GitLab.
+2. In the upper-right corner, click your avatar and select Settings.
+3. On the User Settings menu, select Access Tokens.
+4. Choose a name and optional expiry date for the token.
+5. Choose the desired scopes.
+6. Click the Create personal access token button.
+7. Save the personal access token somewhere safe. Once you leave or refresh the page, you won’t be able to access it again.
+
+# Некоторые скриншоты для важных шагов (дополнить описаниями) #
+
+
+
+# [Comunity FAQ](https://community.atlassian.com) #
+
+## [Undo "Reset current branch to this commit"](https://community.atlassian.com/t5/Sourcetree-questions/Undo-quot-Reset-current-branch-to-this-commit-quot/qaq-p/340956) ##
+
+<p class="note">I had a merge conflict... so I was messing with SourceTree and I did a hard "reset current branch to this commit" and ended with my code resetted and all my changes lost.
+Is there a way that I could revert or undo this?</p>
+
+**ANSWER**
+
+ Fortunately git is pretty good about not losing things, even if you've done a hard reset.
+
+You'll need to use a git built-in tool called the reflog. Sourcetree doesn't yet support it, so you'll need 
+to open your repository from the command line (and install git, if you haven't already).
+Once you're in your repository, run the command git reflog to show a list of ref updates that you've made to your local repository. 
+
+If the "reset" is the last change you made, it should look something like this:
+~~~~
+$ git reflog
+~~~~
+
+<style>
+body {
+  max-width:100%;
+}
+.note {
+  font-size:80%;
+}
+.comment {
+  color:gray;
+  font-size:80%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
