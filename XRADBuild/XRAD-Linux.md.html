@@ -1,0 +1,179 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Сборка XRAD в Linux**
+
+
+
+# Введение #
+
+Способ сборки библиотеки XRAD и приложений требует продумывания и доработки.
+Как требуют доработки и скрипты CMake, использующиеся для сборки.
+Здесь описан первый вариант способа сборки.
+
+
+
+# Условные обозначения #
+
+`/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
+  путь, начинающийся с `~/`, трактуется неверно.
+
+
+
+# Инструменты #
+
+OS: Ubuntu 18.04 (WSL).
+
+GCC: версия 9.2.1.
+
+CMake: использовался CMake 3.10.2 (установлено из пакетов).
+
+Библиотеки: см. [Список сторонних продуктов](../3rd_party/Third_party.md.html).
+
+Замечание. CMake работает неверно, если в качестве пути директории для сборки (binaries) указывать
+путь, начинающийся с `~`. Путь должен быть абсолютным: `/home/{user_name}/...`, где
+`/home/{user_name}` — путь к домашней директории пользователя (`~`).
+То же относится ко многим другим путям, задаваемым в переменных CMake.
+Возможно, дело не в само́м CMake, а в скриптах.
+
+Замечание. В инструкции использована графическая оболочка `cmake-gui`. Использование графической
+оболочки не является обязательным. Все операции можно выполнить с командной строки командой `cmake`.
+
+
+
+# Подготовка #
+
+Собираем необходимые сторонние библиотеки:
+[Список сторонних продуктов](../3rd_party/Third_party.md.html).
+Далее полагаем, что для установки сторонних библиотек использована директория `~/dev-install`.
+
+Создаем директории:
+  - `~/dev/XRAD`
+  - `~/dev/XRAD-build.debug` для сборки Debug (`XRAD-build.release` для Release)
+
+В директорию `~/dev/XRAD` извлекаем репозиторий XRAD.
+
+
+
+# Сборка XRADBasic #
+
+1. Запускаем `cmake-gui`.
+
+1. Выбираем директрию исходного кода (source code): `/home/{user_name}/dev/XRAD`.
+
+1. Выбираем директорию для сборки (binaries): `/home/{user_name}/dev/XRAD-build.debug/XRADBasic`
+  для сборки Debug (используем `XRAD-build.release` для Release).
+  (Далее CMake предложит создать директорию, если она не существует).
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Unix Makefiles"
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (15 секунд).
+
+1. Заполняем поля:
+
+  - `CMAKE_BUILD_TYPE:STRING=Debug` для Debug (`Release` для Release)
+  - `CMAKE_INSTALL_PREFIX:PATH=/home/{user_name}/dev/XRAD-install.debug` (`XRAD-install.release`)
+    (пока эта опция не используется, можно не заполнять)
+
+1. Нажимаем кнопку "Configure". Ждем завершения процесса (меньше секунды).
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (меньше секунды).
+
+1. Закрываем cmake-gui.
+
+1. Переходим в директорию `~/dev/XRAD-build.debug/XRADBasic` (`XRAD-build.release`).
+
+1. Запускаем `cmake --build .`. Ждем завершения сборки.
+
+1. При успешной сборке в этой директории появляется файл `libXRADBasic.a`.
+
+
+
+# Сборка XRADSystem, XRADConsoleUI, XRADDicom #
+
+Сборка осуществляется аналогично сборке XRADBasic.
+
+При сборке XRADDicom потребуется заполнить поле:
+
+- `XRAD_ThirdParty:PATH=/home/{user_name}/dev-install` — путь к директории установки сторонних
+  библиотек.
+
+
+
+# Сборка приложений: XRADConsoleTest #
+
+1. Создаем директории:
+
+  - `~/dev/programs/XRADLibrariesBuild`
+  - `~/dev/programs-build.debug` для сборки Debug (`programs-build.release` для сборки Release)
+
+1. Извлекаем в директорию `~/dev/programs/XRADLibrariesBuild` репозиторий XRADLibrariesBuild.
+
+1. Запускаем `cmake-gui`.
+
+1. Выбираем директрию исходного кода (source code):
+  `/home/{user_name}/dev/programs/XRADLibrariesBuild`.
+
+1. Выбираем директорию для сборки (binaries):
+  `/home/{user_name}/dev/programs-build.debug/XRADConsoleTest`
+  для сборки Debug (используем `programs-build.release` для Release).
+  (Далее CMake предложит создать директорию, если она не существует).
+
+1. Нажимаем кнопку "Configure".
+
+1. В диалоге выбираем:
+  - Generator: "Unix Makefiles"
+  - "Use default native compilers"
+
+1. Нажимаем кнопку "Finish". Ждем завершения процесса (15 секунд).
+
+1. Заполняем поля:
+
+  - `CMAKE_BUILD_TYPE:STRING=Debug` для Debug (`Release` для Release)
+  - `CMAKE_INSTALL_PREFIX:PATH=/home/{user_name}/dev/XRAD-install.debug` (`XRAD-install.release`)
+    (пока эта опция не используется, можно не заполнять)
+  - `XRAD_Root:PATH=/home/{user_name}/dev/XRAD` (если переменная среды XRADRoot не задана)
+
+1. Нажимаем кнопку "Configure".
+
+1. Заполняем поле:
+
+  - `XRAD_BuildDir:PATH=/home/{user_name}/dev/XRAD-build.debug` для Debug
+    (`XRAD-build.release` для Release; если переменная среды XRADRoot не задана)
+
+1. Нажимаем кнопку "Configure".
+
+1. Нажимаем кнопку "Generate". Ждем завершения процесса (меньше секунды).
+
+1. Закрываем cmake-gui.
+
+1. Переходим в директорию `~/dev/programs-build.debug/XRADConsoleTest` (`programs-build.release`).
+
+1. Запускаем `cmake --build .`. Ждем завершения сборки.
+
+1. При успешной сборке в этой директории появляется файл `XRADConsoleTest` (исполняемый).
+
+
+
+# Сборка других приложений #
+
+Сборка других приложений производится аналогично.
+
+Для приложений, использующих XRADDicom, потребуется заполнить поле:
+
+- `XRAD_ThirdParty:PATH=/home/{user_name}/dev-install` — путь к директории установки сторонних
+  библиотек.
+
+
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
