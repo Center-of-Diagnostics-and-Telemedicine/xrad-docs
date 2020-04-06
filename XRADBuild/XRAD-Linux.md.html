@@ -356,6 +356,117 @@ Release сохраняется большое количество _символ
 
 
 
+# Устройство системы сборки XRAD #
+
+Библиотека XRADBasic содержит базовые механизмы системы сборки. Они размещаются в поддиректории
+`CMake`.
+
+- `CommonOptions.cmake` — (содержит include_guard) определение базовых опций и функций.
+- `DetectThirdParty.cmake` — (содержит include_guard) определение переменной `XRAD_ThirdParty`.
+- `PackageSetup.cmake` — (содержит include_guard) базовые определения для подключения пакетов
+  (библиотек), используются в `Package.cmake`.
+- `StdLib.cmake` — (содержит include_guard) базовые определения для библиотек XRAD.
+
+Подключаются они конструкциями вида:
+
+~~~~ cmake
+include(${XRAD_Root}/XRADBasic/CMake/CommonOptions.cmake)
+~~~~
+
+Каждый модуль (библиотека, приложение) должна содержать следующие файлы:
+
+- `CMakeLists.txt` — файл для сборки модуля.
+- `CMake/Package.cmake` — (только для библиотеки) конфигурационный файл для подключения библиотеки.
+
+Файл `Package.cmake` должен содержать следующие элементы (здесь `${PackageName}` — имя библиотеки):
+
+- `include_guard()`.
+- Переменная `${PackageName}_Libraries` — список библиотек (`*.lib`, `*.a`, `*.so`) для линкера,
+  которые нужно подключить для использования библиотеки (т.е. библиотека само́й библиотеки :) и
+  библиотеки её зависимостей). С полными путями.
+- (TODO) Переменная `${PackageName}_Includes` — список директорий include-файлов.
+  На данный момент такая переменная не определяется, для XRAD определяется `${XRAD_IncludeDir}`.
+
+Файл `Package.cmake` подключается конструкцией вида:
+
+~~~~ cmake
+include(${XRAD_Root}/XRADDicom/CMake/Package.cmake)
+~~~~
+
+Include-пути: Для библиотеки XRAD равен `${XRAD_IncludeDir}`, переменная определена в
+`PackageSetup.cmake`, становится доступной при подключении `Package.cmake` любой библиотеки
+репозитория XRAD.
+
+Файл `CMakeLists.txt` модуля должен иметь примерно следующую структуру:
+
+~~~~ cmake
+cmake_minimum_required(VERSION 3.8)
+
+set(Project "имя_модуля")
+project(${Project} LANGUAGES CXX)
+
+set(XRAD_Root $ENV{XRADRoot} CACHE PATH "XRAD library sources directory.")
+if("${XRAD_Root}" STREQUAL "")
+  message(FATAL_ERROR "Please, specify XRAD library sources directory (XRAD_Root).")
+endif()
+
+include(CMake/CommonOptions.cmake)
+include(${XRAD_Root}/XRADBasic/CMake/Package.cmake)
+# и include для подключения Package.cmake других библиотек
+
+# _Добавляем_ в Project_IncludeDirs include-директории проекта и его зависимостей.
+# Резервируем возможность задавать на входе в Project_IncludeDirs дополнительный набор
+# путей из вызывающего CMake-проекта.
+# Здесь добавляются ".;internal;${XRAD_IncludeDir}".
+set(Project_IncludeDirs ${Project_IncludeDirs}
+  .
+  internal
+  ${XRAD_IncludeDir}
+  )
+
+# Задаем список cpp-файлов.
+set(Project_Sources_cpp
+  FantomClass.cpp
+  FantomLibrary.cpp
+  )
+
+# Задаем список заголовочных файлов (h, hh).
+set(Project_Sources_h
+  internal/pre.h
+  FantomClass.h
+  FantomDefs.h
+  FantomLibrary.h
+  )
+
+# Формируем список всех исходных файлов.
+set(Project_Sources_All
+  ${Project_Sources_cpp}
+  ${Project_Sources_h}
+  )
+
+# Задаем выходной продукт.
+# Для dll, so: add_library(${Project} SHARED ${Project_Sources_All})
+# Для статической библиотеки: add_library(${Project} STATIC ${Project_Sources_All})
+# Для приложения:
+add_executable(${Project} ${Project_Sources_All})
+# Задаем список include-путей. Делаем это для конкретной цели: target_include_directories!
+target_include_directories(${Project} PRIVATE ${Project_IncludeDirs})
+# Задаем список библиотек. Делаем это для конкретной цели: target_link_libraries!
+# Переменные *_Libraries заданы в файлах Package.cmake этих библиотек.
+target_link_libraries(${Project}
+  ${XRADDicom_Libraries}
+  ...
+  ${XRADBasic_Libraries}
+  )
+~~~~
+
+Для подключения CMake-файлов по относительным путям (например, из той же директории, где находится
+включающий CMake-файл) в файлах `*.cmake` в директиве `include` следует использовать переменную
+`${CMAKE_CURRENT_LIST_DIR}`. "Текущей" директории (`.`) соответствует не директория CMake-файла с
+инструкцией `include`, а директория обрабатываемого файла `CMakeLists.txt`.
+
+
+
 # TODO #
 
 (См. также TODO в других разделах.)
