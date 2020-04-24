@@ -237,6 +237,37 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XRADDicomGUI", "%XRADRoot%\
 - XRADDicom: XRADSystem, XRADBasic
 - XRADDicomGUI: XRADDicom, XRADGUI, XRADSystem, XRADBasic
 
+Подключение файлов Natvis производится в файле sln следующим образом
+(значения GUID в каждом solution будут свои.):
+
+~~~~ none
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D549ABE2-AF81-4A69-BBA1-8FDEB0897A53}"
+  ProjectSection(SolutionItems) = preProject
+    bin\nlohmann_json.natvis = bin\nlohmann_json.natvis
+    bin\XRAD.natvis = bin\XRAD.natvis
+  EndProjectSection
+EndProject
+~~~~
+
+Эти файлы копируются в папку `bin` при сборке проекта.
+
+В коде C++ для определения конфигурации следует использовать следующие макроопределения:
+
+- `#ifdef XRAD_COMPILER_MSC`: для MSVC, сейчас также предполагает OS Windows
+- `#ifdef XRAD_COMPILER_GNUC`: для GCC, сейчас также предполагает OS Linux
+- `#ifdef XRAD_COMPILER_CMAKE`: для CMake (может использоваться как с GCC, так и с MSVC)
+- `#ifdef XRAD_DEBUG`: для конфигурации Debug
+
+Описание этих макроопределений дается в коде XRAD.
+
+В главном файле консольного приложения для правильной линковки в MSVC должна быть конструкция:
+
+~~~~ cpp
+#ifdef XRAD_COMPILER_MSC
+#include &lt;XRADConsoleUI/Sources/PlatformSpecific/MSVC/MSVC_XRADConsoleUILink.h&gt;
+#endif // XRAD_COMPILER_MSC
+~~~~
+
 
 
 <style>
