@@ -1,0 +1,96 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Сборка Qt, Qwt в Linux**
+
+
+
+# Условные обозначения #
+
+`/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
+  путь, начинающийся с `~/`, трактуется неверно.
+
+
+
+# Инструменты #
+
+OS: Ubuntu 18.04 (WSL).
+
+GCC: версия 9.2.1.
+
+Библиотеки:
+
+- Qt5 (5.9.5).
+- Qwt (исходные тексты): `qwt-6.1.2.zip`
+  ([SourceForge: qwt](https://sourceforge.net/projects/qwt/files/qwt/6.1.2/)
+  [проверено 2020-04-07]).
+
+
+
+# Подготовка #
+
+Создаем директории:
+  - `~/dev` (TODO: `~/dev/ThirdParty`)
+  - `~/dev/install` (TODO: `~/dev/install.debug`, `~/dev/install.release`)
+
+
+
+# Установка Qt #
+
+Я устанавливал готовые пакеты из репозитория Ubuntu [АБЕ].
+
+Перед этим уже был установлен cmake-gui, установивший часть пакетов Qt5.
+
+Устанавливаем пакеты:
+
+- `sudo apt install qt5-default`
+- `sudo apt install libqt5svg5-dev`
+- `sudo apt install qttools5-dev`
+- `sudo apt install qt5-qmake`
+- ??? `sudo apt install libqt5designer5`
+
+
+
+# Сборка Qwt #
+
+1. Создаем директорию `~/dev/qwt-6.1.2`. Здесь будут размещаться исходные коды и здесь же
+  будет происходить сборка (`*.moc`, `*.o`, `*.so`).
+
+1. Распаковаваем из архива `qwt-6.1.2.zip` содержимое директории `qwt-6.1.2` в директорию
+  `~/dev/qwt-6.1.2`.
+
+1. Редактируем файл `~/dev/qwt-6.1.2/qwtconfig.pri`.
+
+~~~~ none
+    QWT_INSTALL_PREFIX    = /home/{user_name}/dev/install/qwt-$$QWT_VERSION
+~~~~
+
+1. Переходим в директорию `~/dev/qwt-6.1.2`.
+
+1. Запускаем `qmake qwt.pro`.
+
+1. Запускаем `make`. Ждем завершения процесса (около 7 минут).
+
+1. При успешной сборке появляется файл `~/dev/qwt-6.1.2/lib/libqwt.so.6.1.2`.
+
+1. Запускаем `make install`. Ждем завершения установки (несколько секунд).
+
+  [У меня процесс завершился ошибкой, но всё установилось. / АБЕ WSL-Ubuntu1804]
+
+1. При успешной установке появляется файл `~/dev/install/qwt-6.1.2/lib/libqwt.so.6.1.2`.
+
+
+
+# Литература #
+
+1. [Build with CMake. Qt Documentation](https://doc.qt.io/qt-5/cmake-manual.html)
+
+
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

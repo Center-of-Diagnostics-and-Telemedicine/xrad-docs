@@ -1,0 +1,249 @@
+﻿<meta charset="utf-8" lang="ru">
+
+**Сборка XRAD в Windows**
+
+
+
+# Введение #
+
+Здесь описан способ сборки в среде MS Visual Studio 2015/2019 с помощью проектов MSVC.
+
+
+
+# Инструменты #
+
+OS: Windows 7, 10.
+
+MSVC: версия 2015, 2019.
+
+Библиотеки: см. [Список сторонних продуктов](../3rd_party/Third_party.md.html).
+
+
+
+# Состав программных продуктов #
+
+Наши программные продукты состоят из следующих частей:
+
+- Сторонние библиотеки — ThirdParty: DCMTK, OpenJPEG и т.д.
+- Наша библиотека XRAD (репозиторий XRAD). Она зависит от сторонних библиотек.
+- Набор исходников CommonSources (репозиторий CommonSources). Файлы из этого набора
+  не оформлены в библиотеку, включаются напрямую в проекты приложений.
+  TODO: Разобраться со структурой CommonSources.
+- Библиотеки, используемые в ограниченном количестве проектов (семейство RASP).
+- Конечные приложения (Fantom, CTLiverExam и т.д.).
+
+
+
+# Размещение файлов #
+
+TODO
+
+
+
+# Установка сторонних библиотек #
+
+
+
+## Установка Qt ##
+
+Инструкция по установке предварительно скомпилированных библиотек из дистрибутива Qt:
+[Список сторонних продуктов](../3rd_party/Third_party.md.html).
+
+Возможна сборка из исходных текстов по инструкции Qt. TODO
+
+MSVC 2019: Вместо плагина, используемого для MSVC 2015, установить плагин для MSVC 2019:
+`qt-vsaddin-msvc2019-2.4.3.vsix` (см. репозиторий ThirdPartySources/Qt5-MSVC).
+
+Замечание. Бинарные библиотеки версии MSVC 2015 используются и для MSVC 2015, и для MSVC 2019.
+Библиотеки версии MSVC 2019 не тестировались.
+
+
+
+## Установка Qwt ##
+
+Производится сборка из исходников. См.
+[Список сторонних продуктов](../3rd_party/Third_party.md.html).
+
+Замечание. Бинарные библиотеки, собранные в MSVC 2015, используются и для MSVC 2015, и для MSVC
+2019. Версия библиотек, собранная в MSVC 2019, не тестировалась.
+
+
+
+## Установка ThirdParty ##
+
+Возможны два способа установки сторонних библиотек ThirdParty: сборка из исходников или установка
+предварительно скомпилированных библиотек.
+
+Для сборки из исходников см. инструкцию
+[Список сторонних продуктов](../3rd_party/Third_party.md.html).
+
+Замечание. Бинарные библиотеки, собранные в MSVC 2015, используются и для MSVC 2015, и для MSVC
+2019. Версия библиотек, собранная в MSVC 2019, не тестировалась.
+
+Процедура установки предварительно скомпилированных библиотек описана ниже.
+
+1. Создайте папку для сторонних библиотек. Имя может быть любое. В качестве примера будем
+  использовать имя `Q:\3rd_party`.
+
+  Замечание. Если библиотека XRAD использовалась ранее и папка для ThirdParty существует,
+  следует использовать её.
+
+  Замечание. Файлы отладочной информации предварительно скомпилированных библиотек созданы для
+  расположения `Q:\3rd_party`. Если вы используете другую папку, для работы файлов отладочной
+  информации можно создать ссылку (Directory Junction) `Q:\3rd_party` на вашу папку.
+
+  TODO: Перейти на расположение `Q:\XRADThirdParty`.
+
+1. Создайте папку для _репозитория_ сторонних библиотек. Расположение и имя может быть любое.
+  В качестве примера будем использовать имя `Q:\3rd_party\ThirdPartyBinariesWin`.
+
+1. Клонируйте в `Q:\3rd_party\ThirdPartyBinariesWin` репозиторий
+  [ThirdPartyBinariesWin](https://yc-gitlab.npcmr.ru/med-img-dep-npcmr/xrad/thirdpartybinarieswin.git).
+
+1. Переключитесь на вершину ветки `develop`. В папке должны появиться архивы 7z.
+
+1. Распакуйте содержимое архивов 7z в папку `Q:\3rd_party`. Должно получиться такое дерево папок:
+
+  - `Q:\3rd_party`
+    - `7z-bin-1`
+    - `dcmtk-icu`
+    - `openjpeg`
+    - `vcruntime-14-1`
+    - `vld`
+
+1. Замечания:
+  - Если какие-то из этих папок уже существуют, рекомендуется заменить их новыми версиями.
+  - В папке `Q:\3rd_party` могут находиться и другие папки. К примеру, папка `dcmtk`, содержащая
+    библиотеку DCMTK, использовавшуюся для сборки старых версий библиотеки `XRADDicom`.
+
+1. Создайте, если это не было сделано ранее, переменную среды `XRADThirdParty`, указывающую на папку
+  `Q:\3rd_party`. Создать переменную среды можно с командной строки:
+
+  ~~~~ none
+  setx XRADThirdParty "Q:\3rd_party"
+  ~~~~
+
+
+
+# Сборка XRAD #
+
+1. Создайте папку для исходных текстов библиотеки XRAD. Имя может быть любое.
+  В качестве примера будем использовать имя `Q:\XRAD`.
+
+  Создайте переменную среды `XRADRoot`, указывающую на папку
+  `Q:\XRAD`. Создать переменную среды можно с командной строки:
+
+  ~~~~ none
+  setx XRADRoot "Q:\XRAD"
+  ~~~~
+
+1. Клонируйте в `Q:\XRAD` репозиторий XRAD.
+
+1. Переключитесь на вершину ветки `develop`.
+
+1. Создайте папку для исходных текстов проекта XRADLibrariesBuild. Имя может быть любое.
+  В качестве примера будем использовать имя `Q:\XRADPrograms\XRADLibrariesBuild`.
+
+1. Клонируйте в `Q:\XRADPrograms\XRADLibrariesBuild` репозиторий XRADLibrariesBuild.
+
+1. Переключитесь на вершину ветки `develop`.
+
+1. Если это не было сделано ранее, создайте папку для установки общих библиотек XRAD.
+  Имя может быть любое.
+  В качестве примера будем использовать имя `Q:\XRADInstall`.
+
+  Создайте переменную среды `XRADInstall`, указывающую на папку
+  `Q:\XRADInstall`. Создать переменную среды можно с командной строки:
+
+  ~~~~ none
+  setx XRADInstall "Q:\XRADInstall"
+  ~~~~
+
+1. Откройте solution для сборки проекта:
+  - XRADLibrariesBuild.sln для MSVC 2015
+  - XRADLibrariesBuild-2019.sln для MSVC 2019
+
+1. Соберите solution в нужных конфигурациях.
+
+
+
+# Сборка приложений #
+
+TODO
+
+Для сборки в MSVC 2019 используются проекты и solution с суффиксом `-2019`.
+
+
+
+# Устройство системы сборки приложений с библиотекой XRAD #
+
+TODO
+
+К приложениям подключаются следующие библиотеки:
+
+- Консольне приложения: XRADConsoleUI
+- Приложения GUI: XRADGUI
+- Модули dll: XRADSystem
+- Приложения, модули, работающие с DICOM, дополнительно подключают библиотеки:
+  - без GUI: XRADDicom
+  - с GUI: XRADDicomGUI
+
+Подключение библиотек осуществляется подключением property sheet _после_
+`$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props`. В файле проекта соответствующие теги имеют
+вид:
+
+- MSVC 2015
+
+  ~~~~ xml
+  &lt;Import Project="$(XRADRoot)\XRADConsoleUI\MSVC\XRADConsoleUI.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADGUI\MSVC\XRADGUI.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADSystem\MSVC\XRADSystem.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADDicom\MSVC\XRADDicom.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADDicom\MSVC\XRADDicomGUI.props" /&gt;
+  ~~~~
+
+- MSVC 2019
+
+  ~~~~ xml
+  &lt;Import Project="$(XRADRoot)\XRADConsoleUI\MSVC\XRADConsoleUI-2019.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADGUI\MSVC\XRADGUI-2019.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADSystem\MSVC\XRADSystem-2019.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADDicom\MSVC\XRADDicom-2019.props" /&gt;
+  &lt;Import Project="$(XRADRoot)\XRADDicom\MSVC\XRADDicomGUI-2019.props" /&gt;
+  ~~~~
+
+Property sheet библиотек DICOM должны включаться после property sheet основных библиотек XRAD.
+Порядок включение важен.
+
+В среде MSVC эти property sheet подключаются в каждой конфигурации и платформе в окне Property
+Manager. В списке в окне они отображаются в порядке, обратном порядку включения.
+Они должны быть выше `Microsoft.Cpp.$(Platform).user.props`.
+
+Чтобы подключить проекты сборки библиотек XRAD в solution проекта приложения (это делать
+необязательно), нужно использовать в пути переменную среды `XRADRoot`.
+Сделать это через GUI, вероятно, невозможно. После подключения проектов библиотек нужно
+отредактировать файл sln в текстовом редакторе.
+В файле sln подключение выглядит следующим образом:
+
+~~~~ none
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XRADDicomGUI", "%XRADRoot%\XRADDicomGUI\MSVC\XRADDicomGUI.vcxproj", "{6A6EEC8F-C1AB-445E-A73B-5B4368599D9B}"
+...
+~~~~
+
+В sln библиотеки следует подключать с зависимостями:
+
+- XRADGUI: XRADSystem, XRADBasic
+- XRADConsoleUI: XRADSystem, XRADBasic
+- XRADDicom: XRADSystem, XRADBasic
+- XRADDicomGUI: XRADDicom, XRADGUI, XRADSystem, XRADBasic
+
+
+
+<style>
+body {
+  font-family:Arial;
+  color:black;
+  max-width:100%;
+}
+</style>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script>window.markdeepOptions = {mode: 'markdeep', detectMath: false};</script><script src="markdeep.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
