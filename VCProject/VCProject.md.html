@@ -25,6 +25,8 @@
 
 Файл проекта vcxproj состоит из нескольких разделов:
 
+TODO: MSVC 2019 + Qt
+
 1. `&lt;ItemGroup Label="ProjectConfigurations"&gt;`
 
   Здесь задается набор конфигураций и платформ проекта. Управление осуществляется в диалоге
@@ -58,7 +60,7 @@
   - `ProjectName`: задает имя проекта, если оно должно по каким-то причинам отличаться
     от имени файла проекта. Стараемся не задавать этот параметр, а давать нужное имя
     файлу проекта.
-  - `Keyword`: не задаем.
+  - `Keyword`: не задаем. (MSVC 2019 + Qt: `QtVS_v302`.)
 
 1. `&lt;Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" /&gt;`
 
@@ -132,7 +134,7 @@
 
   Также сюда подключаются property sheets XRAD инструкциями вида:
 
-  `&lt;Import Project="$(XRADRoot)\XRADBasic\MSVC\XRADBasic.props" /&gt;`
+  `&lt;Import Project="$(XRADRoot)\XRADGUI\MSVC\XRADGUI.props" /&gt;`
 
   Список property sheets XRAD:
 
@@ -146,11 +148,11 @@
     Включает в себя:
     - `XRADSystem.props`
 
-  <li>`$(XRADRoot)\Projects\XRADQt\XRADQt.props`:
+  <li>`$(XRADRoot)\XRADQt\MSVC\XRADQt.props`:
     Базовый набор опций для подключения Qt. Используется в приложениях, которые используют
     Qt напрямую, без XRADGUI.
 
-  <li>`$(XRADRoot)\Projects\XRADGUI\XRADGUI.props`:
+  <li>`$(XRADRoot)\XRADGUI\MSVC\XRADGUI.props`:
     Набор опций для GUI-приложений, а также библиотек, использующих GUI.
 
     Включает в себя:
@@ -238,13 +240,13 @@
     включается наследование значений ("Inherit from parent or project default" /
     `%(AdditionalIncludeDirectories)`).
 
-    Для использования VLD должен содержать следующее значение:
+    Например, для использования VLD он мог бы содержать следующее значение:
 
     ~~~~ none
     $(XRADThirdParty)\vld\include;%(AdditionalIncludeDirectories)
     ~~~~
 
-    Замечание: Пути к библиотеке VLD уже заданы в `XRADBasic.props`.
+    Замечание: Пути к библиотеке VLD уже заданы в `XRADBasic.props`, их задавать не надо.
 
     Этот параметр должен задаваться одинаковым для всех конфигураций.
 
@@ -262,13 +264,14 @@
     значений по умолчанию ("Inherit from parent or project default" /
     `%(AdditionalLibraryDirectories)`).
 
-    Для использования VLD должен содержать следующее значение:
+    Например, для использования VLD он мог бы содержать следующее значение:
 
     ~~~~ none
     $(XRADThirdParty)\vld\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)
     ~~~~
 
-    Замечание: Пути к библиотеке VLD уже заданы в `XRADBasic.props`.
+    В настоящее время пути к библиотеке VLD уже заданы в `XRADBasic.props`,
+    этот параметр в большинстве проектов должен быть пустым.
 
     Этот параметр должен задаваться одинаковым для всех конфигураций.
 
@@ -419,6 +422,7 @@
 
 Для размещения библиотек (lib-файлов) предусмотрены две папки: локальная для решения (solution) и
 глобальная.
+
 - локальная папка библиотек проекта: `$(SolutionDir)lib\$(PlatformTarget)-$(Configuration)\`;
   в `XRADLibBasic.props` для неё устанавливается макрос (и переменная среды) `$(XRAD_LibDir)`;
 - глобальная папка библиотек XRAD: `$(XRADInstall)\lib\MSVC2015\$(PlatformTarget)\`,
