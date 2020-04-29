@@ -9,6 +9,8 @@
 `/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
   путь, начинающийся с `~/`, трактуется неверно.
 
+См. также [Вопросы сборки приложений в Linux](../XRADBuild/Linux-build.md.html).
+
 
 
 # Инструменты #
@@ -51,17 +53,29 @@ CMake: использовался CMake 3.10.2 (установлено из па
 # Подготовка #
 
 Создаем директории:
-  - `~/dev` (TODO: `~/dev/ThirdParty`)
-  - `~/dev-install` (TODO: `~/dev/install.debug`, `~/dev/install.release`)
+- `~/projects/sources/XRADThirdParty`
+- `~/projects/build-release` (TODO: `build-debug`)
+- `~/projects/install-release` (TODO: `install-debug`)
+
+Задаем переменную среды:
+
+~~~~ none
+export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
+~~~~
+
+(TODO: Debug)
+
+Подготовку проектов сборки (cmake-gui) для Release и Debug конфигураций выполняем с соответствующим
+значением переменной `CMAKE_PREFIX_PATH`.
 
 
 
 # Сборка OpenJPEG #
 
-1. Создаем директорию `~/dev/openjpeg`.
+1. Создаем директорию `~/projects/sources/XRADThirdParty/openjpeg-2.2.0`.
 
 1. Распаковаваем содержимое архива `openjpeg-2.2.0.zip` в директорию
-  `~/dev/openjpeg/openjpeg-2.2.0`.
+  `~/projects/sources/XRADThirdParty/openjpeg-2.2.0`.
 
 1. [EXPORTS] Применяем патч для сборки статической библиотеки без экспортируемых символов: файл
   `src/lib/openjp2/CMakeLists.txt` заменяем на файл `openjpeg-2.2.0-exports/CMakeLists.txt.patched`,
@@ -71,12 +85,16 @@ CMake: использовался CMake 3.10.2 (установлено из па
   необходимые для сборки статической библиотеки без экспортируемых функций, при выключенной
   опции `BUILD_SHARED_LIBS` (см. ниже).
 
+1. Убеждаемся, что значение переменной среды `CMAKE_PREFIX_PATH` верное.
+
 1. Запускаем `cmake-gui`.
 
-1. Выбираем директрию исходного кода (source code): `/home/{user_name}/dev/openjpeg/openjpeg-2.2.0`.
+1. Выбираем директрию исходного кода (source code):
+  `/home/{user_name}/projects/sources/XRADThirdParty/openjpeg-2.2.0`.
 
-1. Выбираем директорию для сборки (binaries): `/home/{user_name}/dev/openjpeg/build` (CMake
-  предложит создать директорию).
+1. Выбираем директорию для сборки (binaries):
+  `/home/{user_name}/projects/build-release/openjpeg-2.2.0`
+  (CMake предложит создать директорию).
 
 1. Нажимаем кнопку "Configure".
 
@@ -92,10 +110,21 @@ CMake: использовался CMake 3.10.2 (установлено из па
     статические `*.a`) [TODO: Разобраться, что удобнее в работе.]
   - `CMAKE_BUILD_TYPE:STRING=Release` [TODO: Для сборки Debug-библиотек:
     `CMAKE_BUILD_TYPE:STRING=Debug`]
-  - `CMAKE_INSTALL_PREFIX:PATH=/home/{user_name}/dev-install`
-  - `CMAKE_C_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических библиотек)
-  - `CMAKE_CXX_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических библиотек)
+  - `CMAKE_INSTALL_PREFIX:PATH=/usr/local`
+  - [`CMAKE_C_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических библиотек)]
+  - [`CMAKE_CXX_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических
+    библиотек)]
   - Остальные поля осталяем по умолчанию.
+
+1. Добавляем поле:
+  - `CMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON` (генерировать код, подходящий для сборки динамических
+    библиотек)
+
+1. Удостоверяемся, что ссылки на библиотеку zlib правильные:
+
+  - `ZLIB_INCLUDE_DIR`, `ZLIB_LIBRARY_RELEASE` ссылаются на директорию
+    `/home/{user_name}/projects/install-release/usr/local` (заданную в `CMAKE_PREFIX_PATH`).
+    [TODO: Debug]
 
 1. Нажимаем кнопку "Configure". Ждем завершения процесса (меньше секунды).
 
@@ -103,16 +132,22 @@ CMake: использовался CMake 3.10.2 (установлено из па
 
 1. Закрываем cmake-gui.
 
-1. Переходим в директорию `~/dev/openjpeg/build`.
+1. Переходим в директорию `~/projects/build-release/openjpeg-2.2.0`.
 
 1. Запускаем `cmake --build .`. Ждем завершения сборки (порядка 1 минуты).
 
-1. При успешной сборке появляется файл `~/dev/openjpeg/build/bin/libopenjp2.a`
-  (`libopenjp2.so.2.2.0`).
+1. При успешной сборке появляется файл `~/projects/build-release/openjpeg-2.2.0/bin/libopenjp2.a`
+  (`libopenjp2.so.2.2.0` сейчас не собирается).
 
-1. Запускаем `make install`. Ждем завершения установки (несколько секунд).
+1. Запускаем:
 
-1. При успешной установке появляется файл `~/dev-install/lib/libopenjp2.a` (`libopenjp2.so.2.2.0`).
+  ~~~~ none
+  $ make DESTDIR=/home/{user_name}/projects/install-release install
+  ~~~~
+
+  Ждем завершения установки (несколько секунд).
+
+1. При успешной установке появляется файл `~/projects/install-release/usr/local/lib/libopenjp2.a`.
 
 
 

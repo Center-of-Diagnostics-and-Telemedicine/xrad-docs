@@ -9,6 +9,8 @@
 `/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
   путь, начинающийся с `~/`, трактуется неверно.
 
+См. также [Вопросы сборки приложений в Linux](../XRADBuild/Linux-build.md.html).
+
 
 
 # Обоснование выбора конфигурации #
@@ -83,16 +85,29 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 # Подготовка #
 
 Создаем директории:
-  - `~/dev` (TODO: `~/dev/ThirdParty`)
-  - `~/dev-install` (TODO: `~/dev/install.debug`, `~/dev/install.release`)
+- `~/projects/sources/XRADThirdParty`
+- `~/projects/build-release` (TODO: `build-debug`)
+- `~/projects/install-release` (TODO: `install-debug`)
+
+Задаем переменную среды:
+
+~~~~ none
+export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
+~~~~
+
+(TODO: Debug)
+
+Подготовку проектов сборки (cmake-gui) для Release и Debug конфигураций выполняем с соответствующим
+значением переменной `CMAKE_PREFIX_PATH`.
 
 
 
 # Сборка zlib #
 
-1. Создаем директорию `~/dev/zlib`.
+1. Создаем директорию `~/projects/sources/XRADThirdParty/zlib-1.2.11`.
 
-1. Распаковаваем содержимое архива `zlib-1.2.11.tar.gz` в директорию `~/dev/zlib/zlib-1.2.11`.
+1. Распаковаваем содержимое архива `zlib-1.2.11.tar.gz` в директорию
+  `~/projects/XRADThirdParty/zlib-1.2.11`.
 
 1. [EXPORTS] Применяем патч для сборки статической библиотеки без экспортируемых символов: файл
   `CMakeLists.txt` заменяем на файл `zlib-1.2.11-exports/CMakeLists.txt.patched`, приложенный
@@ -104,9 +119,11 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 
 1. Запускаем `cmake-gui`.
 
-1. Выбираем директрию исходного кода (source code): `/home/{user_name}/dev/zlib/zlib-1.2.11`.
+1. Выбираем директрию исходного кода (source code):
+  `/home/{user_name}/projects/sources/XRADThirdParty/zlib-1.2.11`.
 
-1. Выбираем директорию для сборки (binaries): `/home/{user_name}/dev/zlib/build` (CMake предложит
+1. Выбираем директорию для сборки (binaries):
+  `/home/{user_name}/projects/build-release/zlib-1.2.11` (CMake предложит
   создать директорию).
 
 1. Нажимаем кнопку "Configure".
@@ -121,14 +138,17 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 
   - `CMAKE_BUILD_TYPE:STRING=Release` [TODO: Для сборки Debug-библиотек:
     `CMAKE_BUILD_TYPE:STRING=Debug`]
-  - `CMAKE_INSTALL_PREFIX:PATH=~/dev-install` (установку скомпилированных библиотек производим
-    в домашнюю директорию пользователя)
-  - `INSTALL_BIN_DIR:PATH=~/dev-install/bin`
-  - `INSTALL_INC_DIR:PATH=~/dev-install/include`
-  - `INSTALL_LIB_DIR:PATH=~/dev-install/lib`
-  - `INSTALL_MAN_DIR:PATH=~/dev-install/share/man`
-  - `INSTALL_PKGCONFIG_DIR:PATH=~/dev-install/share/pkgconfig`
-  - `CMAKE_C_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических библиотек)
+  - `CMAKE_INSTALL_PREFIX:PATH=/usr/local` (оставляем директорию по умолчанию)
+  - в полях ниже оставляем только относительную часть пути, это важно для установки
+    в директорию, отличную от директории по умолчанию:
+  - `INSTALL_BIN_DIR:PATH=bin`
+  - `INSTALL_INC_DIR:PATH=include`
+  - `INSTALL_LIB_DIR:PATH=lib`
+  - `INSTALL_MAN_DIR:PATH=share/man`
+  - `INSTALL_PKGCONFIG_DIR:PATH=share/pkgconfig`
+  - `CMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON` (генерировать код, подходящий для сборки динамических
+    библиотек) Эту опцию здесь выставлять необязательно, т.к. по факту она применяется автоматически
+    из-за сборки, кроме статической, динамической библиотеки `libz.so.*`.
 
 1. [EXPORTS] Для отключения экспортируемых символов добавляем поля (кнопкой "Add Entry"):
 
@@ -143,35 +163,46 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 
 1. Закрываем cmake-gui.
 
-1. Переходим в директорию `~/dev/zlib/build`.
+1. Переходим в директорию `~/projects/build-release/zlib-1.2.11`.
 
 1. Запускаем `cmake --build .`. Ждем завершения сборки (порядка 30 секунд).
 
-1. При успешной сборке появляется файл `~/dev/zlib/build/libz.a` (`libz.so.1.2.11`).
+1. При успешной сборке появляется файл `~/projects/build-release/zlib-1.2.11/libz.a`
+  (`libz.so.1.2.11`).
 
-1. Запускаем `make install`. Ждем завершения установки (несколько секунд).
+1. Запускаем:
 
-1. При успешной установке появляется файл `~/dev-install/lib/libz.a` (`libz.so.1.2.11`).
+  ~~~~ none
+  $ make DESTDIR=/home/{user_name}/projects/install-release install
+  ~~~~
+
+  Ждем завершения установки (несколько секунд).
+
+1. При успешной установке появляется файл `~/projects/install-release/usr/local/lib/libz.a`
+  (`libz.so.1.2.11`).
 
 
 
 # Сборка OpenSSL #
 
-1. Создаем директорию `~/dev/openssl`.
+1. Создаем директорию `~/projects/sources/XRADThirdParty/openssl-1.1.0f`.
 
 1. Распаковаваем содержимое архива `openssl-1.1.0f.tar.gz` в директорию
-  `~/dev/openssl/openssl-1.1.0f`.
+  `~/projects/sources/XRADThirdParty/openssl-1.1.0f`.
 
-1. Создаем директорию `~/dev/openssl/build`.
+1. Создаем директорию `~/projects/build-release/openssl-1.1.0f`.
 
 1. Запускаем:
 
   ~~~~ none
-  $ ../openssl-1.1.0f/config --prefix=/home/{user_name}/dev-install \
-    --openssldir=/home/{user_name}/dev-install/ssl
+  $ ~/projects/sources/XRADThirdParty/openssl-1.1.0f/config
   ~~~~
 
-  Замечание. Задать в качестве пути `~/dev-install` нельзя, скрипт конфигурации требует абсолютные
+  [TODO: `$ ~/projects/sources/XRADThirdParty/openssl-1.1.0f/config
+  --prefix=/usr/local \
+  --openssldir=/usr/local/ssl`]
+
+  Замечание. Задать в качестве пути `~/...` нельзя, скрипт конфигурации требует абсолютные
   пути.
 
   TODO: `--debug`, `--zlib`
@@ -183,28 +214,39 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 1. Запускаем `make test`. Ждем завершения просецца (5-10 минут). Согласно руководству OpenSSL,
   эта стадия, запуск тестов, не является обязательной, но очень рекомендуется.
 
-1. Запускаем `make install`. Ждем завершения процесса (3-4 минуты).
+1. Запускаем:
 
-1. При успешной установке появляются файлы `~/dev-install/lib/libssl.a` (`libssl.so.1.1`),
-  `libcrypto.a` (`libcrypto.so.1.1`).
+  ~~~~ none
+  $ make DESTDIR=/home/{user_name}/projects/install-release install
+  ~~~~
+
+  Ждем завершения процесса (3-4 минуты).
+
+1. При успешной установке появляются файлы `~/projects/install-release/usr/local/lib/libssl.a`
+  (`libssl.so.1.1`), `libcrypto.a` (`libcrypto.so.1.1`).
 
 
 
 # Сборка DCMTK #
 
-1. Создаем директорию `~/dev/dcmtk`.
+1. Создаем директорию `~/projects/sources/XRADThirdParty/dcmtk-3.6.2`.
 
-1. Распаковаваем содержимое архива `dcmtk-3.6.2.tar.gz` в директорию `~/dev/dcmtk/dcmtk-3.6.2`.
+1. Распаковаваем содержимое архива `dcmtk-3.6.2.tar.gz` в директорию
+  `~/projects/sources/XRADThirdParty/dcmtk-3.6.2`.
 
 1. [EXPORTS] Применяем патч для сборки статической библиотеки без экспортируемых символов: файл
   `CMake/dcmtkMacros.cmake` заменяем на файл `dcmtk-3.6.2-exports/dcmtkMacros.cmake.patched`,
   приложенный к данной документации.
 
+1. Убеждаемся, что значение переменной среды `CMAKE_PREFIX_PATH` верное.
+
 1. Запускаем `cmake-gui`.
 
-1. Выбираем директрию исходного кода (source code): `/home/{user_name}/dev/dcmtk/dcmtk-3.6.2`.
+1. Выбираем директрию исходного кода (source code):
+  `/home/{user_name}/projects/sources/XRADThirdParty/dcmtk-3.6.2`.
 
-1. Выбираем директорию для сборки (binaries): `/home/{user_name}/dev/dcmtk/build`
+1. Выбираем директорию для сборки (binaries):
+  `/home/{user_name}/projects/build-release/dcmtk-3.6.2`
   (CMake предложит создать директорию).
 
 1. Нажимаем кнопку "Configure".
@@ -259,7 +301,8 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 
   (Эта ошибка возникает в Ubuntu 18.04 / Windows Subsystem for Linux.
   Неверные операции с плавающей точкой вызывают аварийное завершение программы
-  даже при установленных обработчиках сигналов.)
+  даже при установленных обработчиках сигналов. При сборке под "обычным" Ubuntu 18.04 ошибка не
+  возникала.)
 
   В этом случае нельзя перезапускать процесс конфигурации, не устранив причину ошибки. Иначе
   получается неправильный заголовочный файл конфигурации DCMTK, библиотека не скомпилируется.
@@ -284,18 +327,24 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
   - `CMAKE_BUILD_TYPE:STRING=Release` [TODO: Для сборки Debug-библиотек:
     `CMAKE_BUILD_TYPE:STRING=Debug`]
   - [TODO: `CMAKE_CXX_FLAGS:STRING=?` (добавить C++17?)]
-  - `CMAKE_INSTALL_PREFIX:PATH=/home/{user_name}/dev-install`
+  - `CMAKE_INSTALL_PREFIX:PATH=/usr/local`
+  - `DCMTK_ENABLE_BUILTIN_DICTIONARY:BOOL=ON`
   - `DCMTK_ENABLE_CHARSET_CONVERSION:STRING=stdlibc (iconv)` (использовать для преобразования
     кодировок стандартную библиотеку iconv)
   - `DCMTK_ENABLE_CXX11:BOOL=ON` (использовать move-семантику и т.п.)
+  - `DCMTK_ENABLE_EXTERNAL_DICTIONARY:BOOL=OFF`
   - `DCMTK_ENABLE_PRIVATE_TAGS:BOOL=ON` (разрешает использовать DICOM private tags)
   - `DCMTK_ENABLE_STL:BOOL=ON` (включает использование в DCMTK string, vector и т.д.)
   - `DCMTK_WITH_OPENSSL:BOOL=ON` (использовать библиотеку OpenSSL)
   - `DCMTK_WITH_STDLIBC_ICONV:BOOL=ON` (использовать стандартную библиотеку iconv)
   - `DCMTK_WITH_THREADS:BOOL=ON` (поддерживать многопоточную работу; по умолчанию включено)
   - `DCMTK_WITH_ZLIB:BOOL=ON` (использовать библиотеку zlib)
-  - `CMAKE_C_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических библиотек)
-  - `CMAKE_CXX_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических библиотек)
+  - `DCMTK_FORCE_FPIC_ON_UNIX:BOOL=ON` (устанавливает опцию
+    `CMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON`: генерировать код, подходящий для сборки динамических
+    библиотек)
+  - [`CMAKE_C_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических библиотек)]
+  - [`CMAKE_CXX_FLAGS:STRING=-fPIC` (генерировать код, подходящий для сборки динамических
+    библиотек)]
   - Остальные поля оставляем по умолчанию.
 
 1. [EXPORTS] Для отключения экспортируемых символов добавляем поля (кнопкой "Add Entry"):
@@ -303,6 +352,13 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
   - `CMAKE_CXX_VISIBILITY_PRESET:STRING=hidden`
   - `CMAKE_C_VISIBILITY_PRESET:STRING=hidden`
   - `CMAKE_VISIBILITY_INLINES_HIDDEN:BOOL=ON`
+
+1. Удостоверяемся, что ссылки на библиотеки zlib, openssl правильные:
+
+  - `ZLIB_INCLUDE_DIR`, `ZLIB_LIBRARY_RELEASE`,
+    `OPENSSL_CRYPTO_LIBRARY`, `OPENSSL_INCLUDE_DIR`, `OPENSSL_SSL_LIBRARY` ссылаются на директорию
+    `/home/{user_name}/projects/install-release/usr/local` (заданную в `CMAKE_PREFIX_PATH`).
+    [TODO: Debug]
 
 1. Нажимаем кнопку "Configure". Ждем завершения процесса (около полминуты).
 
@@ -312,13 +368,19 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 
 1. Закрываем cmake-gui.
 
-1. Переходим в директорию `~/dev/dcmtk/build`.
+1. Переходим в директорию `~//home/{user_name}/projects/build-release/dcmtk-3.6.2`.
 
 1. Запускаем `cmake --build .`. Ждем завершения процесса (1-1,5 часа).
 
-1. Запускаем `make install`. Ждем завершения процесса (1-2 минуты).
+1. Запускаем:
 
-1. При успешной установке появляются файлы `~/dev-install/lib/libdcmdata.a`
+  ~~~~ none
+  $ make DESTDIR=/home/{user_name}/projects/install-release install
+  ~~~~
+
+  Ждем завершения процесса (1-2 минуты).
+
+1. При успешной установке появляются файлы `~/projects/install-release/usr/local/lib/libdcmdata.a`
   и другие файлы библиотеки DCMTK.
 
 
