@@ -9,9 +9,10 @@
 `/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
   путь, начинающийся с `~/`, трактуется неверно.
 
-См. также [Вопросы сборки приложений в Linux](../XRADBuild/Linux-build.md.html).
+По умолчанию указываются параметры для сборки Release-конфигурации. В скобках указываются параметры
+для сборки Debug-конфигурации.
 
-TODO: Привести в соответствие с "Вопросами сборки приложений в Linux".
+См. также [Вопросы сборки приложений в Linux](../XRADBuild/Linux-build.md.html).
 
 
 
@@ -23,26 +24,31 @@ GCC: версия 9.2.1.
 
 Библиотеки:
 
-- Qt5 (5.9.5).
+- Qt5 (5.6.0 и выше; протестировано с 5.9.5; для версий в диапазоне 5.6.1—5.9.4 потребуется
+  внесение изменений в исходные тексты XRAD, связанное с ошибкой в Qt 5.6.0)
 - Qwt (исходные тексты): `qwt-6.1.2.zip`
-  ([SourceForge: qwt](https://sourceforge.net/projects/qwt/files/qwt/6.1.2/)
-  [проверено 2020-04-07]).
+  - [SourceForge: qwt](https://sourceforge.net/projects/qwt/files/qwt/6.1.2/)
+    [проверено 2020-04-07]
+  - репозиторий GitLab:
+    [XRAD/ThirdPartySources/Qwt-6.1.2](https://yc-gitlab.npcmr.ru/med-img-dep-npcmr/xrad/thirdpartysources/qwt-6.1.2)
 
 
 
 # Подготовка #
 
 Создаем директории:
-  - `~/dev` (TODO: `~/dev/ThirdParty`)
-  - `~/dev/install` (TODO: `~/dev/install.debug`, `~/dev/install.release`)
+  - `~/projects/sources/XRADThirdParty`
+  - `~/projects/build-release` (`build-debug`)
+  - `~/projects/install-release` (`install-debug`)
 
 
 
 # Установка Qt #
 
-Я устанавливал готовые пакеты из репозитория Ubuntu [АБЕ].
+Замечания:
 
-Перед этим уже был установлен cmake-gui, установивший часть пакетов Qt5.
+- Я [АБЕ] устанавливал готовые пакеты из репозитория Ubuntu.
+- Перед этим уже был установлен cmake-gui, установивший часть пакетов Qt5.
 
 Устанавливаем пакеты:
 
@@ -50,37 +56,44 @@ GCC: версия 9.2.1.
 - `sudo apt install libqt5svg5-dev`
 - `sudo apt install qttools5-dev`
 - `sudo apt install qt5-qmake`
-- ??? `sudo apt install libqt5designer5`
+- (TODO: Нужно ли?) `sudo apt install libqt5designer5`
 
 
 
 # Сборка Qwt #
 
-1. Создаем директорию `~/dev/qwt-6.1.2`. Здесь будут размещаться исходные коды и здесь же
-  будет происходить сборка (`*.moc`, `*.o`, `*.so`).
+1. Создаем директорию `~/projects/sources/XRADThirdParty/qwt-6.1.2`.
+  Здесь будут размещаться исходные коды.
 
 1. Распаковаваем из архива `qwt-6.1.2.zip` содержимое директории `qwt-6.1.2` в директорию
-  `~/dev/qwt-6.1.2`.
+  `~/projects/sources/XRADThirdParty/qwt-6.1.2`.
 
-1. Редактируем файл `~/dev/qwt-6.1.2/qwtconfig.pri`.
+1. Создаем директорию `~/projects/build-release/qwt-6.1.2` (`.../build-debug/...`).
 
-~~~~ none
-    QWT_INSTALL_PREFIX    = /home/{user_name}/dev/install/qwt-$$QWT_VERSION
-~~~~
+1. Переходим в директорию `~/projects/build-release/qwt-6.1.2` (`.../build-debug/...`).
 
-1. Переходим в директорию `~/dev/qwt-6.1.2`.
-
-1. Запускаем `qmake qwt.pro`.
+1. Для сборки Release-конфигурации запускаем `qmake qwt.pro`. (TODO: Для сборки Debug-конфигурации
+  нужно в командной строке qmake переопределить переменную: `CONFIG=debug`.)
 
 1. Запускаем `make`. Ждем завершения процесса (около 7 минут).
 
-1. При успешной сборке появляется файл `~/dev/qwt-6.1.2/lib/libqwt.so.6.1.2`.
+1. При успешной сборке появляется файл `~/projects/build-release/qwt-6.1.2/lib/libqwt.so.6.1.2`
+  (`.../build-debug/...`).
 
-1. Запускаем `make install`. Ждем завершения установки (несколько секунд).
+1. Запускаем:
 
-  [У меня процесс завершился ошибкой, но всё установилось. / АБЕ WSL-Ubuntu1804]
+  ~~~~ none
+  $ make INSTALL_ROOT=/home/{user_name}/projects/install-release install
+  ~~~~
 
-1. При успешной установке появляется файл `~/dev/install/qwt-6.1.2/lib/libqwt.so.6.1.2`.
+  (`.../install-debug`)
+
+  Ждем завершения установки (несколько секунд).
+
+  [У меня процесс завершился ошибкой, но всё установилось. / АБЕ WSL — Ubuntu 18.04]
+
+1. При успешной установке появляется файл
+  `~/projects/install-release/qwt-6.1.2/lib/libqwt.so.6.1.2`.
 
 
 

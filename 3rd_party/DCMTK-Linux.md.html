@@ -9,6 +9,9 @@
 `/home/{user_name}/` — домашняя директория пользователя, `~`. Используется в тех местах, где
   путь, начинающийся с `~/`, трактуется неверно.
 
+По умолчанию указываются параметры для сборки Release-конфигурации. В двойных скобках (())
+указываются параметры для сборки Debug-конфигурации.
+
 См. также [Вопросы сборки приложений в Linux](../XRADBuild/Linux-build.md.html).
 
 
@@ -47,20 +50,24 @@ GCC: версия 9.2.1.
 
 CMake: использовался CMake 3.10.2 (установлено из пакетов).
 
-Библиотеки:
+Библиотеки (DCMTK и сторонние библиотеки для него):
 
 - DCMTK (исходные тексты): `dcmtk-3.6.2.tar.gz`
-  ([dcmtk.org:
-  download DCMTK 3.6.2](https://www.dcmtk.org/download/dcmtk/dcmtk362/)
-  [проверено 2020-01-09]).
-- Сторонние библиотеки для DCMTK (исходные тексты):
-  - Zlib: `zlib-1.2.11.tar.gz`
-    ([zlib.net: fossils](https://www.zlib.net/fossils/)
-    [проверено 2020-01-09],
-    для сборки требуется CMake)
-  - OpenSSL: `openssl-1.1.0f.tar.gz`
-    ([openssl.org](https://ftp.openssl.org/source/old/1.1.0/)
-    [проверено 2020-01-09])
+  - [dcmtk.org:
+    download DCMTK 3.6.2](https://www.dcmtk.org/download/dcmtk/dcmtk362/)
+    [проверено 2020-01-09]
+  - репозиторий GitLab:
+    [XRAD/ThirdPartySources/DCMTK-3.6.2](https://yc-gitlab.npcmr.ru/med-img-dep-npcmr/xrad/thirdpartysources/dcmtk-3.6.2)
+- Zlib: `zlib-1.2.11.tar.gz`
+  - [zlib.net: fossils](https://www.zlib.net/fossils/)
+    [проверено 2020-01-09]
+  - репозиторий GitLab:
+    [XRAD/ThirdPartySources/DCMTK-3.6.2](https://yc-gitlab.npcmr.ru/med-img-dep-npcmr/xrad/thirdpartysources/dcmtk-3.6.2)
+- OpenSSL: `openssl-1.1.0f.tar.gz`
+  - [openssl.org](https://ftp.openssl.org/source/old/1.1.0/)
+    [проверено 2020-01-09]
+  - репозиторий GitLab:
+    [XRAD/ThirdPartySources/DCMTK-3.6.2](https://yc-gitlab.npcmr.ru/med-img-dep-npcmr/xrad/thirdpartysources/dcmtk-3.6.2)
 
 Замечание. CMake работает неверно, если в качестве пути директории для сборки (binaries) указывать
 путь, начинающийся с `~`. Путь должен быть абсолютным: `/home/{user_name}/...`, где
@@ -86,8 +93,8 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 
 Создаем директории:
 - `~/projects/sources/XRADThirdParty`
-- `~/projects/build-release` (TODO: `build-debug`)
-- `~/projects/install-release` (TODO: `install-debug`)
+- `~/projects/build-release` ((`build-debug`))
+- `~/projects/install-release` ((`install-debug`))
 
 Задаем переменную среды:
 
@@ -95,7 +102,7 @@ ASUS UX32VD + Windows 10.1909 + WSL. На более быстрых машина
 export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 ~~~~
 
-(TODO: Debug)
+((`.../install-debug/...`))
 
 Подготовку проектов сборки (cmake-gui) для Release и Debug конфигураций выполняем с соответствующим
 значением переменной `CMAKE_PREFIX_PATH`.
@@ -123,7 +130,7 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
   `/home/{user_name}/projects/sources/XRADThirdParty/zlib-1.2.11`.
 
 1. Выбираем директорию для сборки (binaries):
-  `/home/{user_name}/projects/build-release/zlib-1.2.11` (CMake предложит
+  `/home/{user_name}/projects/build-release/zlib-1.2.11` ((`.../build-debug/...`)) (CMake предложит
   создать директорию).
 
 1. Нажимаем кнопку "Configure".
@@ -136,8 +143,7 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Заполняем поля:
 
-  - `CMAKE_BUILD_TYPE:STRING=Release` [TODO: Для сборки Debug-библиотек:
-    `CMAKE_BUILD_TYPE:STRING=Debug`]
+  - `CMAKE_BUILD_TYPE:STRING=Release` ((`Debug`))
   - `CMAKE_INSTALL_PREFIX:PATH=/usr/local` (оставляем директорию по умолчанию)
   - в полях ниже оставляем только относительную часть пути, это важно для установки
     в директорию, отличную от директории по умолчанию:
@@ -163,12 +169,12 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Закрываем cmake-gui.
 
-1. Переходим в директорию `~/projects/build-release/zlib-1.2.11`.
+1. Переходим в директорию `~/projects/build-release/zlib-1.2.11` ((`.../build-debug/...`)).
 
 1. Запускаем `cmake --build .`. Ждем завершения сборки (порядка 30 секунд).
 
 1. При успешной сборке появляется файл `~/projects/build-release/zlib-1.2.11/libz.a`
-  (`libz.so.1.2.11`).
+  (`libz.so.1.2.11`) ((`.../build-debug/...`)).
 
 1. Запускаем:
 
@@ -176,10 +182,12 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
   $ make DESTDIR=/home/{user_name}/projects/install-release install
   ~~~~
 
+  ((`.../install-debug`))
+
   Ждем завершения установки (несколько секунд).
 
 1. При успешной установке появляется файл `~/projects/install-release/usr/local/lib/libz.a`
-  (`libz.so.1.2.11`).
+  (`libz.so.1.2.11`) ((`.../install-debug/...`)).
 
 
 
@@ -190,7 +198,7 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 1. Распаковаваем содержимое архива `openssl-1.1.0f.tar.gz` в директорию
   `~/projects/sources/XRADThirdParty/openssl-1.1.0f`.
 
-1. Создаем директорию `~/projects/build-release/openssl-1.1.0f`.
+1. Создаем директорию `~/projects/build-release/openssl-1.1.0f` ((`.../build-debug/...`)).
 
 1. Запускаем:
 
@@ -220,10 +228,12 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
   $ make DESTDIR=/home/{user_name}/projects/install-release install
   ~~~~
 
+  ((`.../install-debug`))
+
   Ждем завершения процесса (3-4 минуты).
 
 1. При успешной установке появляются файлы `~/projects/install-release/usr/local/lib/libssl.a`
-  (`libssl.so.1.1`), `libcrypto.a` (`libcrypto.so.1.1`).
+  (`libssl.so.1.1`), `libcrypto.a` (`libcrypto.so.1.1`) ((`.../install-debug/...`)).
 
 
 
@@ -247,7 +257,7 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Выбираем директорию для сборки (binaries):
   `/home/{user_name}/projects/build-release/dcmtk-3.6.2`
-  (CMake предложит создать директорию).
+  ((`.../build-debug/...`)) (CMake предложит создать директорию).
 
 1. Нажимаем кнопку "Configure".
 
@@ -324,8 +334,7 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
   - `BUILD_APPS:BOOL=OFF` (отключаем создание приложений: они требуют дополнительных библиотек)
   - `BUILD_SHARED_LIBS:BOOL=OFF` (откключаем сборку динамических библиотек `*.so`, собираем
     статические `*.a`) [TODO: Разобраться, что удобнее в работе.]
-  - `CMAKE_BUILD_TYPE:STRING=Release` [TODO: Для сборки Debug-библиотек:
-    `CMAKE_BUILD_TYPE:STRING=Debug`]
+  - `CMAKE_BUILD_TYPE:STRING=Release` ((`Debug`))
   - [TODO: `CMAKE_CXX_FLAGS:STRING=?` (добавить C++17?)]
   - `CMAKE_INSTALL_PREFIX:PATH=/usr/local`
   - `DCMTK_ENABLE_BUILTIN_DICTIONARY:BOOL=ON`
@@ -355,10 +364,10 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Удостоверяемся, что ссылки на библиотеки zlib, openssl правильные:
 
-  - `ZLIB_INCLUDE_DIR`, `ZLIB_LIBRARY_RELEASE`,
+  - `ZLIB_INCLUDE_DIR`, `ZLIB_LIBRARY_RELEASE` ((`ZLIB_LIBRARY_DEBUG`)),
     `OPENSSL_CRYPTO_LIBRARY`, `OPENSSL_INCLUDE_DIR`, `OPENSSL_SSL_LIBRARY` ссылаются на директорию
-    `/home/{user_name}/projects/install-release/usr/local` (заданную в `CMAKE_PREFIX_PATH`).
-    [TODO: Debug]
+    `/home/{user_name}/projects/install-release/usr/local` ((`.../install-debug/...`)),
+    заданную в `CMAKE_PREFIX_PATH`.
 
 1. Нажимаем кнопку "Configure". Ждем завершения процесса (около полминуты).
 
@@ -368,7 +377,8 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Закрываем cmake-gui.
 
-1. Переходим в директорию `~//home/{user_name}/projects/build-release/dcmtk-3.6.2`.
+1. Переходим в директорию `~//home/{user_name}/projects/build-release/dcmtk-3.6.2`
+  ((`.../build-debug/...`)).
 
 1. Запускаем `cmake --build .`. Ждем завершения процесса (1-1,5 часа).
 
@@ -378,10 +388,12 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
   $ make DESTDIR=/home/{user_name}/projects/install-release install
   ~~~~
 
+  ((`.../install-debug/...`))
+
   Ждем завершения процесса (1-2 минуты).
 
 1. При успешной установке появляются файлы `~/projects/install-release/usr/local/lib/libdcmdata.a`
-  и другие файлы библиотеки DCMTK.
+  ((`.../install-debug/...`)) и другие файлы библиотеки DCMTK.
 
 
 
