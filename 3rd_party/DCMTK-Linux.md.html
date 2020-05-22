@@ -171,7 +171,13 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Переходим в директорию `~/projects/build-release/zlib-1.2.11` ((`.../build-debug/...`)).
 
-1. Запускаем `cmake --build .`. Ждем завершения сборки (порядка 30 секунд).
+1. Запускаем:
+
+  ~~~~ none
+  $ cmake --build .
+  ~~~~
+
+  Ждем завершения сборки (порядка 30 секунд).
 
 1. При успешной сборке появляется файл `~/projects/build-release/zlib-1.2.11/libz.a`
   (`libz.so.1.2.11`) ((`.../build-debug/...`)).
@@ -200,26 +206,40 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Создаем директорию `~/projects/build-release/openssl-1.1.0f` ((`.../build-debug/...`)).
 
+1. Переходим в директорию `~/projects/build-release/openssl-1.1.0f` ((`.../build-debug/...`)).
+
 1. Запускаем:
 
   ~~~~ none
   $ ~/projects/sources/XRADThirdParty/openssl-1.1.0f/config
   ~~~~
 
-  [TODO: `$ ~/projects/sources/XRADThirdParty/openssl-1.1.0f/config
-  --prefix=/usr/local \
-  --openssldir=/usr/local/ssl`]
-
-  Замечание. Задать в качестве пути `~/...` нельзя, скрипт конфигурации требует абсолютные
-  пути.
+  Примечание. Для изменения путей установки библиотеки по умолчанию на этапе конфигурации
+  служат параметры:
+  `--prefix=/usr/local`, `--openssldir=/usr/local/ssl` (здесь указаны значения по умолчанию).
+  Пути должны быть указаны абсолютные, пути вида `~/...` не поддерживаются.
+  Изменять пути установки на данном этапе не следует, если скомпилированную библиотеку планируется
+  запускать на других машинах.
 
   TODO: `--debug`, `--zlib`
 
 1. Ждем завершения процесса (несколько секунд).
 
-1. Запускаем `make`. Ждем завершения процесса (10-15 минут).
+1. Запускаем:
 
-1. Запускаем `make test`. Ждем завершения просецца (5-10 минут). Согласно руководству OpenSSL,
+  ~~~~ none
+  $ make
+  ~~~~
+
+  Ждем завершения процесса (10-15 минут).
+
+1. Запускаем:
+
+  ~~~~ none
+  $ make test
+  ~~~~
+
+  Ждем завершения процесса (5-10 минут). Согласно руководству OpenSSL,
   эта стадия, запуск тестов, не является обязательной, но очень рекомендуется.
 
 1. Запускаем:
@@ -380,7 +400,13 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 1. Переходим в директорию `~//home/{user_name}/projects/build-release/dcmtk-3.6.2`
   ((`.../build-debug/...`)).
 
-1. Запускаем `cmake --build .`. Ждем завершения процесса (1-1,5 часа).
+1. Запускаем:
+
+  ~~~~ none
+  $ cmake --build .
+  ~~~~
+
+  Ждем завершения процесса (1-1,5 часа).
 
 1. Запускаем:
 

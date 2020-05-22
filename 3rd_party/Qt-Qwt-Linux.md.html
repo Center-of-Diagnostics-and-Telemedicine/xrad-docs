@@ -72,10 +72,22 @@ GCC: версия 9.2.1.
 
 1. Переходим в директорию `~/projects/build-release/qwt-6.1.2` (`.../build-debug/...`).
 
-1. Для сборки Release-конфигурации запускаем `qmake qwt.pro`. (TODO: Для сборки Debug-конфигурации
-  нужно в командной строке qmake переопределить переменную: `CONFIG=debug`.)
+1. Для сборки Release-конфигурации запускаем:
 
-1. Запускаем `make`. Ждем завершения процесса (около 7 минут).
+  ~~~~ none
+  $ qmake /home/{user_name}/projects/sources/XRADThirdParty/qwt-6.1.2/qwt.pro
+  ~~~~
+
+  TODO: Для сборки Debug-конфигурации
+  нужно в командной строке qmake переопределить переменную: `CONFIG=debug`.
+
+1. Запускаем:
+
+  ~~~~ none
+  $ make
+  ~~~~
+
+  Ждем завершения процесса (около 7 минут).
 
 1. При успешной сборке появляется файл `~/projects/build-release/qwt-6.1.2/lib/libqwt.so.6.1.2`
   (`.../build-debug/...`).

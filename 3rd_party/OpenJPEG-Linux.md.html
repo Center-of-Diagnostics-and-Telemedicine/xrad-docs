@@ -138,7 +138,13 @@ export CMAKE_PREFIX_PATH=/home/{user_name}/projects/install-release/usr/local
 
 1. Переходим в директорию `~/projects/build-release/openjpeg-2.2.0` ((`.../build-debug/...`)).
 
-1. Запускаем `cmake --build .`. Ждем завершения сборки (порядка 1 минуты).
+1. Запускаем:
+
+  ~~~~ none
+  $ cmake --build .
+  ~~~~
+
+  Ждем завершения сборки (порядка 1 минуты).
 
 1. При успешной сборке появляется файл `~/projects/build-release/openjpeg-2.2.0/bin/libopenjp2.a`
   ((`.../build-debug/...`)) (`libopenjp2.so.2.2.0` сейчас не собирается).
